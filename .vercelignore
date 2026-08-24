@@ -1,0 +1,8 @@
+# Never upload local secrets or the local dev database to Vercel, even on a
+# manual `vercel deploy` from this working directory (Vercel's own env vars,
+# set in the project dashboard/CLI, are what the deployed app actually uses).
+.env
+.env.*
+!.env.example
+dev.db
+dev.db-journal
