@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
@@ -10,6 +11,11 @@ import { PrismaPg } from "@prisma/adapter-pg";
  * prisma/schema.prisma's datasource comment. `DATABASE_URL` must always be
  * a real Postgres connection string (local dev points at its own database,
  * production at its own); there is no SQLite-file fallback any more.
+ *
+ * `dotenv/config` is loaded explicitly here (harmless no-op under Next.js,
+ * which already loads `.env` itself) because standalone scripts run via
+ * `tsx` (scripts/ingest.ts, scripts/ingest-watch.ts) have no other .env
+ * loading of their own — without this they'd see `DATABASE_URL` as unset.
  */
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
