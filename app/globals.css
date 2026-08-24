@@ -1,26 +1,174 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Design tokens — "football intelligence" palette.
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  Base: deep navy ink on warm off-white (a modern, cooler-toned evolution of
+  the earlier olive-paper palette — still editorial, less "vintage
+  newspaper"). Brand/interactive colour is an electric lime/chartreuse,
+  used as: a legible darkened "ink-safe" variant for text/lines on light
+  surfaces (--color-accent), and the true vivid lime for the fixed-dark
+  hero band and other dark surfaces (--hero-accent) where it can sing
+  without a contrast problem.
+
+  Semantic system (never used as decoration alone):
+    accent/positive → brand identity, strong/improving performance (lime)
+    info            → analytical context, secondary signals (cyan)
+    attention       → volatility, uncertainty, small samples (amber)
+    negative        → decline, mistakes (coral)
+*/
+:root {
+  --color-canvas: #faf8f3;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef0f3;
+  --color-border: #e1e3e8;
+  --color-border-strong: #ccd0da;
+  --color-ink: #11142a;
+  --color-ink-soft: #4b4f66;
+  --color-ink-faint: #83879c;
+
+  /* Brand / positive — deep, legible chartreuse for light surfaces. */
+  --color-accent: #4c6b12;
+  --color-accent-soft: #eef6d6;
+  --color-positive: var(--color-accent);
+  --color-positive-soft: var(--color-accent-soft);
+
+  /* Information — analytical, secondary context. */
+  --color-info: #0c7b93;
+  --color-info-soft: #dcf1f4;
+
+  /* Attention — volatility, uncertainty, small samples. */
+  --color-attention: #966400;
+  --color-attention-soft: #faecd0;
+
+  /* Negative — decline, restrained (not alarmist) coral. */
+  --color-negative: #b8422c;
+  --color-negative-soft: #fbe3dc;
+
+  /* Fixed masthead surface — intentionally does not invert with theme;
+     it's a brand element (like a newspaper's editorial band), not content.
+     Deep navy-black, not neutral black — ties the hero to the ink hue. */
+  --hero-bg: #0b0e1c;
+  --hero-bg-2: #171b2e;
+  --hero-glow: rgba(203, 244, 58, 0.14);
+  --hero-ink: #f6f6f2;
+  --hero-ink-soft: rgba(246, 246, 242, 0.64);
+  --hero-ink-faint: rgba(246, 246, 242, 0.42);
+  --hero-border: rgba(246, 246, 242, 0.12);
+  --hero-accent: #cbf43a;
+  --hero-info: #4dd9e8;
+  --hero-attention: #f2b807;
+
+  --font-sans: var(--font-geist-sans), -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-editorial), Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-canvas: #0b0e1c;
+    --color-surface: #12162a;
+    --color-surface-2: #171c33;
+    --color-border: #262c46;
+    --color-border-strong: #383f5e;
+    --color-ink: #f1f1f5;
+    --color-ink-soft: #b7b9cb;
+    --color-ink-faint: #7d8098;
+
+    --color-accent: #cbf43a;
+    --color-accent-soft: #202b0e;
+    --color-positive: var(--color-accent);
+    --color-positive-soft: var(--color-accent-soft);
+
+    --color-info: #4dd9e8;
+    --color-info-soft: #0f2a30;
+
+    --color-attention: #f2b807;
+    --color-attention-soft: #2e2308;
+
+    --color-negative: #f17557;
+    --color-negative-soft: #2e1710;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-border: var(--color-border);
+  --color-ink: var(--color-ink);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+}
+
+/* In Tailwind v4, unlayered rules always beat @layer utilities regardless of
+   specificity — so this default has to live in @layer base, or it silently
+   wins over every utility that tries to set a different border colour
+   (e.g. a hover accent), which is exactly the bug that motivated this note. */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Consistent, visible keyboard focus everywhere — colour is never the only
+   signal of interactivity. Scoped inside @layer base so a component's own
+   focus-visible utility can still override it (see the border-color note
+   above for why that placement matters in Tailwind v4). Elements inside
+   the fixed-dark hero band (data-hero) get a lighter ring, since the
+   default accent is far too dark to read against that surface. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  [data-hero] :focus-visible {
+    outline-color: var(--hero-accent);
+  }
+}
+
+@keyframes grow-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-reveal {
+  animation: reveal 0.18s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-reveal {
+    animation: none;
+  }
 }

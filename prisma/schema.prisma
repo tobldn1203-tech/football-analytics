@@ -1,0 +1,205 @@
+// Prisma schema — MVP normalized data model.
+// See docs/PROJECT_PROPOSAL.md for the full architecture rationale.
+//
+// Design notes:
+// - Every provider-sourced row carries `provider` + `externalId` (unique
+//   together) so ingestion can upsert safely and a second provider can be
+//   added later without changing the shape of these fields.
+// - PostgreSQL, used for both local development and production (see
+//   lib/db/client.ts and prisma.config.ts) — the schema was deliberately
+//   kept free of SQLite-only features from the start, so this was a
+//   provider-string swap, not a data-model rewrite.
+// - No persisted "analytics results" table yet — the current dataset is
+//   small enough to compute rankings/scores on read. See
+//   lib/analytics/scoring for that layer.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Competition {
+  id       String    @id @default(cuid())
+  provider String
+  code     String // e.g. "premier-league"
+  name     String
+  seasons  Season[]
+  teams    Team[]
+  players  Player[]
+  matches  Match[]
+
+  @@unique([provider, code])
+}
+
+model Season {
+  id            String      @id @default(cuid())
+  provider      String
+  externalId    String // provider's identifier for this season, if any
+  label         String // e.g. "2026/27"
+  isCurrent     Boolean     @default(false)
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id])
+  matches       Match[]
+
+  @@unique([provider, externalId])
+  @@index([competitionId])
+}
+
+model Team {
+  id            String      @id @default(cuid())
+  provider      String
+  externalId    String // provider's team id
+  name          String
+  shortName     String
+  /// Provider's crest asset code (see lib/assets) — an identity/imagery
+  /// field, not an analytical statistic.
+  crestCode     Int?
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id])
+
+  players       Player[]
+  homeMatches   Match[]                @relation("HomeTeam")
+  awayMatches   Match[]                @relation("AwayTeam")
+  performances  TeamMatchPerformance[]
+
+  @@unique([provider, externalId])
+  @@index([competitionId])
+}
+
+/// GKP | DEF | MID | FWD — kept as a plain string because SQLite has no enum
+/// type; validated at the application boundary (lib/competitions).
+model Player {
+  id            String      @id @default(cuid())
+  provider      String
+  externalId    String // provider's player id
+  slug          String      @unique
+  firstName     String
+  lastName      String
+  displayName   String // short/display name shown in the UI
+  position      String
+  status        String // "a" available, "i" injured, "s" suspended, ...
+  /// Provider's photo asset code (see lib/assets) — an identity/imagery
+  /// field, not an analytical statistic.
+  photoCode     String?
+  teamId        String
+  team          Team        @relation(fields: [teamId], references: [id])
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id])
+
+  performances PlayerMatchPerformance[]
+
+  @@unique([provider, externalId])
+  @@index([teamId])
+}
+
+model Match {
+  id            String      @id @default(cuid())
+  provider      String
+  externalId    String // provider's fixture id
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id])
+  seasonId      String
+  season        Season      @relation(fields: [seasonId], references: [id])
+  gameweek      Int?
+  kickoff       DateTime
+  status        String // "scheduled" | "finished"
+  homeTeamId    String
+  homeTeam      Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId    String
+  awayTeam      Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeScore     Int?
+  awayScore     Int?
+
+  playerPerformances PlayerMatchPerformance[]
+  teamPerformances   TeamMatchPerformance[]
+
+  @@unique([provider, externalId])
+  @@index([seasonId])
+  @@index([kickoff])
+}
+
+model TeamMatchPerformance {
+  id         String @id @default(cuid())
+  matchId    String
+  match      Match  @relation(fields: [matchId], references: [id])
+  teamId     String
+  team       Team   @relation(fields: [teamId], references: [id])
+  isHome     Boolean
+  goalsFor   Int
+  goalsAgainst Int
+  result     String // "W" | "D" | "L"
+
+  @@unique([matchId, teamId])
+  @@index([teamId])
+}
+
+/// One row per player per match. Populated in two passes by ingestion:
+/// fixture-level event attribution first (goals/assists/cards/bonus), then
+/// gameweek-level detail (minutes/xG/xA/defensive actions) — see
+/// lib/ingestion/fpl. Fields default to 0 until both passes have run.
+model PlayerMatchPerformance {
+  id       String @id @default(cuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+  matchId  String
+  match    Match  @relation(fields: [matchId], references: [id])
+  teamId   String
+
+  minutes             Int     @default(0)
+  /// From FPL's per-gameweek `starts` flag — whether this player started
+  /// the match (vs. appeared as a substitute). See
+  /// docs/MATCH_CENTRE_DATA_AUDIT.md §3 "Lineups" — available from the
+  /// provider but unused until the Match Centre needed a Starting XI.
+  started             Boolean @default(false)
+  goals               Int     @default(0)
+  assists             Int     @default(0)
+  cleanSheets         Int     @default(0)
+  goalsConceded       Int     @default(0)
+  yellowCards         Int     @default(0)
+  redCards            Int     @default(0)
+  saves               Int     @default(0)
+  bonus               Int     @default(0)
+  bps                 Int     @default(0)
+  expectedGoals       Float   @default(0)
+  expectedAssists     Float   @default(0)
+  expectedGoalsConceded Float @default(0)
+  defensiveActions    Float   @default(0) // FPL "defensive contribution" proxy (CBI/tackles/recoveries)
+  ictIndex            Float   @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([playerId, matchId])
+  @@index([matchId])
+}
+
+/// A raw, unmodified snapshot of a provider payload — kept for traceability
+/// and to make schema drift a diff instead of a silent break. Not read by
+/// the analytics engine.
+model RawIngestionPayload {
+  id         String   @id @default(cuid())
+  provider   String
+  endpoint   String
+  fetchedAt  DateTime @default(now())
+  payload    String // JSON, stored as text (SQLite has no native JSON type)
+
+  @@index([provider, endpoint, fetchedAt])
+}
+
+/// One row per ingestion task run — powers "data last updated" in the UI
+/// and gives operators a simple audit trail without a full job queue.
+model IngestionLog {
+  id              String   @id @default(cuid())
+  provider        String
+  task            String // e.g. "teams", "players", "fixtures", "gameweek-stats"
+  startedAt       DateTime @default(now())
+  finishedAt      DateTime?
+  status          String // "running" | "success" | "failed"
+  recordsWritten  Int      @default(0)
+  message         String?
+
+  @@index([provider, task, startedAt])
+}

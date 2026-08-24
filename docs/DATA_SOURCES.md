@@ -4,6 +4,22 @@ Investigated 2026-08-23 by directly querying each source (not from documentation
 Raw sample responses referenced here were fetched live; endpoints marked "confirmed" returned
 real HTTP 200 payloads inspected during this investigation.
 
+**Update (same day, discovered during ingestion + UI work):**
+
+- `ict_index` (and `influence`/`creativity`/`threat`) on `/event/{gw}/live/` reports `0` for
+  every player until FPL finalizes a gameweek — the same kind of lag as `finished_provisional`
+  below, just on a different field. `bps` does not have this lag and updates immediately, so the
+  scoring engine's Impact/Form categories read `bps`, not `ict_index`. See the comment at the top
+  of `lib/analytics/scoring/provisional.ts`.
+- The Premier League's own media CDN serves both team crests
+  (`resources.premierleague.com/premierleague/badges/{size}/t{team.code}.png`) and player photos
+  (`.../photos/players/{size}/p{code}.png`, `code` from the numeric prefix of the `photo` field) —
+  confirmed with real HTTP 200s. This is the same CDN premierleague.com and the FPL app use, not a
+  scrape of an unrelated site. In practice, a meaningful minority of player photo codes are
+  blocked in-browser (`ERR_BLOCKED_BY_ORB`) even though `curl` fetches them fine — some asset IDs
+  appear to carry a stricter resource policy. `lib/assets/images.ts` + the `PlayerAvatar` component
+  degrade to a generated initial avatar in that case; crests have not shown this issue.
+
 ## 1. Fantasy Premier League public API — CONFIRMED, primary source for v1
 
 Base: `https://fantasy.premierleague.com/api/`

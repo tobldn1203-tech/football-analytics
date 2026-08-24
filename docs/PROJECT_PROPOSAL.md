@@ -152,9 +152,10 @@ A layered, versioned engine:
    bonus/BPS components). "Progression" is explicitly **not implemented in v1** — we don't have
    progressive-passing data from any confirmed free source, and it will not be faked. It's
    documented as a deferred category pending a richer data source.
-3. **Position-aware normalization** — a player's category score is computed relative to their
-   position's distribution, not the whole league (a centre-back is never compared to a striker on
-   Attack).
+3. **Position-aware normalization, applied selectively** — Attack/Creation/Impact/Form are ranked
+   league-wide (the metric means the same thing for everyone, so a standalone "best goal threat"
+   list should surface attackers, not an outlier defender). Defence is ranked position-relative,
+   because what "good defensively" means differs by role. Overall blends both, position-weighted.
 4. **Overall score (0–10)** — a weighted composite of category scores, weights specific to
    position/role. Weights are a hypothesis to be validated against visible reality (do the top of
    the ranking match what a knowledgeable fan would expect?), not treated as ground truth from day
