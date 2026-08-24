@@ -3,6 +3,17 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+// DATABASE_URL is a pooled Prisma Postgres connection — safe for many
+// concurrent short-lived connections, which is what a serverless
+// deployment produces on every request. Used for both Prisma Migrate here
+// and the Prisma Client at runtime (lib/db/client.ts). An earlier version
+// of this used Prisma Postgres's "direct" connection instead — that
+// endpoint runs under a role with a very small connection cap intended
+// for admin/migration use, and Vercel's serverless functions exhausted it
+// almost immediately under real traffic ("too many connections for role
+// 'prisma_migration'"). This version's `prisma/config` datasource type
+// doesn't support a separate directUrl field, but the pooled URL alone
+// works fine for both migrate and runtime use here — verified directly.
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
