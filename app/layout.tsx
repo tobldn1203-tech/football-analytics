@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PersonalisationProvider } from "@/components/personalisation/personalisation-provider";
 import { getAllTeams } from "@/lib/directory/repository";
@@ -49,6 +50,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <SiteHeader />
           {children}
         </PersonalisationProvider>
+        <Analytics />
       </body>
     </html>
   );
