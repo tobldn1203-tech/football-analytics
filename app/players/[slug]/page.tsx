@@ -17,6 +17,7 @@ import { ComingSoonPanel } from "@/components/ui/coming-soon-panel";
 import { TrendBadge } from "@/components/ui/trend-badge";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
 import { TeamIdentity } from "@/components/identity/team-identity";
+import { NationalityFlag } from "@/components/identity/nationality-flag";
 import { MatchRatingBadge } from "@/components/matches/match-rating";
 import { SeasonStory } from "@/components/players/season-story";
 import { ArchetypeBadge, ArchetypeCard } from "@/components/players/archetype-card";
@@ -101,8 +102,9 @@ export default async function PlayerProfilePage({
               glow
             />
             <div className="min-w-0">
-              <h1 className="truncate font-display text-[26px] font-semibold leading-tight tracking-tight text-[var(--hero-ink)] sm:text-[32px]">
-                {player.name}
+              <h1 className="flex items-center gap-2 truncate font-display text-[26px] font-semibold leading-tight tracking-tight text-[var(--hero-ink)] sm:text-[32px]">
+                <NationalityFlag code={player.nationalityCode} country={player.nationality} size="md" />
+                <span className="truncate">{player.name}</span>
               </h1>
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[14px] text-[var(--hero-ink-soft)]">
                 <TeamIdentity

@@ -11,6 +11,7 @@ import { POSITION_LABEL } from "@/lib/competitions/premier-league";
 import { getTeamColor } from "@/lib/competitions/teamBranding";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
 import { TeamIdentity } from "@/components/identity/team-identity";
+import { NationalityFlag } from "@/components/identity/nationality-flag";
 import { CATEGORY_ICON } from "@/components/ui/category-icons";
 import { WhyPanel } from "./why-panel";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -200,8 +201,9 @@ function PerformanceTable({
                       <span className="flex flex-col">
                         <Link
                           href={`/players/${p.slug}`}
-                          className="font-medium text-[var(--color-ink)] hover:text-[var(--color-accent)]"
+                          className="flex items-center gap-1.5 font-medium text-[var(--color-ink)] hover:text-[var(--color-accent)]"
                         >
+                          <NationalityFlag code={p.nationalityCode} country={p.nationality} size="xs" />
                           {p.name}
                         </Link>
                         <span className="text-[12px] text-[var(--color-ink-faint)] sm:hidden">

@@ -62,6 +62,13 @@ export interface RankedPlayer {
   /** Pass-through identity imagery — see lib/assets/images.ts. Not analytics. */
   photoUrl: string | null;
   teamCrestUrl: string | null;
+  /** Pass-through identity — see prisma/schema.prisma's Player.nationality
+   *  comment. Optional/absent (not just null) so existing object literals
+   *  built without it — tests, the synthetic "team as player" object in
+   *  teamRepository.ts — don't need updating; UI treats missing the same
+   *  as null (no flag shown). Not analytics. */
+  nationality?: string | null;
+  nationalityCode?: string | null;
 }
 
 export const QUALITY_BANDS: Array<{ min: number; label: string }> = [

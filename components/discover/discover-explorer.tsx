@@ -177,6 +177,8 @@ function DiscoverCard({ entry, tint }: { entry: DiscoverEntry; tint: string }) {
         name={player.name}
         crestUrl={player.teamCrestUrl}
         teamShortName={player.teamShortName}
+        nationality={player.nationality}
+        nationalityCode={player.nationalityCode}
         size="md"
         subtitle={`${player.teamShortName} · ${POSITION_LABEL[player.position]}`}
       />

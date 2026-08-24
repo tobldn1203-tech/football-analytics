@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Player nationality flags — see components/identity/nationality-flag.tsx. */
+@import "flag-icons/css/flag-icons.min.css";
 
 /*
   Design tokens — "football intelligence" palette.

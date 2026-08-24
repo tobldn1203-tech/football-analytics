@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
 import { TeamCrest } from "@/components/identity/team-crest";
+import { NationalityFlag } from "@/components/identity/nationality-flag";
 import type { MatchStandout as MatchStandoutData } from "@/lib/analytics/scoring/matchRepository";
 
 /**
@@ -31,9 +32,10 @@ export function MatchStandout({
           </p>
           <Link
             href={`/players/${standout.slug}`}
-            className="font-display block truncate text-[17px] font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)]"
+            className="font-display flex items-center gap-1.5 truncate text-[17px] font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)]"
           >
-            {standout.name}
+            <NationalityFlag code={standout.nationalityCode} country={standout.nationality} size="sm" />
+            <span className="truncate">{standout.name}</span>
           </Link>
           <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[var(--color-ink-faint)]">
             <TeamCrest crestUrl={teamCrestUrl} shortName={teamShortName} size="sm" />

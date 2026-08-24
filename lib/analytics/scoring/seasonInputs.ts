@@ -65,6 +65,8 @@ export async function getCurrentSeasonPerformanceInputs(): Promise<
       position: player.position as PositionCode,
       photoUrl: getPlayerPhotoUrl(player.photoCode),
       teamCrestUrl: getTeamCrestUrl(player.team.crestCode),
+      nationality: player.nationality,
+      nationalityCode: player.nationalityCode,
       season: {
         minutes: sum((p) => p.minutes),
         matches: appearances.length,

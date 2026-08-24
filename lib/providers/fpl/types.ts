@@ -47,6 +47,11 @@ export const FplPlayerSchema = z.object({
   ict_index: numericString,
   /// e.g. "154561.jpg" — used to build the official player photo URL, see lib/assets.
   photo: z.string(),
+  /// Used only as a disambiguating match key for nationality enrichment
+  /// (see lib/ingestion/nationality) — never persisted or displayed.
+  /// FPL also exposes an undocumented `region` integer with no reliable
+  /// public country mapping; deliberately not modelled here at all.
+  birth_date: z.string().nullable().optional(),
 });
 export type FplPlayer = z.infer<typeof FplPlayerSchema>;
 

@@ -154,6 +154,8 @@ export interface SquadMember {
   name: string;
   position: PositionCode;
   photoUrl: string | null;
+  nationality?: string | null;
+  nationalityCode?: string | null;
   minutes: number;
   started: boolean;
   goals: number;
@@ -203,6 +205,8 @@ export interface PerformanceLeader {
   slug: string;
   name: string;
   photoUrl: string | null;
+  nationality?: string | null;
+  nationalityCode?: string | null;
   score: number;
 }
 
@@ -306,12 +310,30 @@ export function computeLeaders(members: SquadMember[], ratingByPlayerId: Map<str
       const score = ratingByPlayerId.get(m.playerId)?.scores[key] ?? 0;
       if (score >= MATCH_STRENGTH_MIN && (!best || score > best.score)) best = { member: m, score };
     }
-    return best ? { playerId: best.member.playerId, slug: best.member.slug, name: best.member.name, photoUrl: best.member.photoUrl, score: best.score } : null;
+    return best
+      ? {
+          playerId: best.member.playerId,
+          slug: best.member.slug,
+          name: best.member.name,
+          photoUrl: best.member.photoUrl,
+          nationality: best.member.nationality,
+          nationalityCode: best.member.nationalityCode,
+          score: best.score,
+        }
+      : null;
   };
 
   return {
     bestPerformer: bestPerformer
-      ? { playerId: bestPerformer.playerId, slug: bestPerformer.slug, name: bestPerformer.name, photoUrl: bestPerformer.photoUrl, score: bestPerformer.rating!.score }
+      ? {
+          playerId: bestPerformer.playerId,
+          slug: bestPerformer.slug,
+          name: bestPerformer.name,
+          photoUrl: bestPerformer.photoUrl,
+          nationality: bestPerformer.nationality,
+          nationalityCode: bestPerformer.nationalityCode,
+          score: bestPerformer.rating!.score,
+        }
       : null,
     strongestAttack: byCategory("attack"),
     strongestCreation: byCategory("creation"),
@@ -425,6 +447,8 @@ export async function getMatchCentre(matchId: string): Promise<MatchCentreData |
       name: p.player.displayName,
       position: p.player.position as PositionCode,
       photoUrl: getPlayerPhotoUrl(p.player.photoCode),
+      nationality: p.player.nationality,
+      nationalityCode: p.player.nationalityCode,
       minutes: p.minutes,
       started: p.started,
       goals: p.goals,

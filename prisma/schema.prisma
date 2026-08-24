@@ -85,6 +85,22 @@ model Player {
   /// Provider's photo asset code (see lib/assets) — an identity/imagery
   /// field, not an analytical statistic.
   photoCode     String?
+  /// The country a player represents internationally (e.g. "England",
+  /// "Spain") — NOT necessarily the same as legal citizenship (an English
+  /// player's citizenship is "United Kingdom", but their football
+  /// nationality is "England"). Sourced from Wikidata's P1532 "country for
+  /// sport" property via a separate, occasional enrichment script
+  /// (scripts/enrich-nationality.ts) — deliberately NOT derived from FPL's
+  /// own undocumented `region` integer, which has no reliable public
+  /// mapping to countries. Null whenever we don't have a high-confidence
+  /// match: no flag shown is preferred over a guessed one.
+  nationality     String?
+  /// Flag icon code for `nationality`, matching the `flag-icons` npm
+  /// package's codes — an ISO 3166-1 alpha-2 code (e.g. "es", "br") or,
+  /// for the UK's four football nations specifically, "gb-eng" | "gb-sct"
+  /// | "gb-wls" | "gb-nir" (England/Scotland/Wales/Northern Ireland have
+  /// no ISO 3166-1 code of their own, since they aren't sovereign states).
+  nationalityCode String?
   teamId        String
   team          Team        @relation(fields: [teamId], references: [id])
   competitionId String

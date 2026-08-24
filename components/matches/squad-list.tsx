@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
+import { NationalityFlag } from "@/components/identity/nationality-flag";
 import { POSITION_LABEL } from "@/lib/competitions/premier-league";
 import { MatchRatingBadge } from "./match-rating";
 import type { SquadMember } from "@/lib/analytics/scoring/matchRepository";
@@ -56,6 +57,7 @@ function SquadRow({ member, teamShortName }: { member: SquadMember; teamShortNam
       <PlayerAvatar photoUrl={member.photoUrl} name={member.name} teamShortName={teamShortName} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
+          <NationalityFlag code={member.nationalityCode} country={member.nationality} size="xs" />
           <span className="truncate text-[13.5px] font-medium text-[var(--color-ink)]">{member.name}</span>
           {events.length > 0 && (
             <span className="shrink-0 text-[11px]">{events.join(" ")}</span>

@@ -11,7 +11,8 @@
     "test": "vitest run",
     "postinstall": "prisma generate",
     "ingest": "tsx scripts/ingest.ts",
-    "ingest:watch": "tsx scripts/ingest-watch.ts"
+    "ingest:watch": "tsx scripts/ingest-watch.ts",
+    "enrich-nationality": "tsx scripts/enrich-nationality.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
@@ -19,6 +20,7 @@
     "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
+    "flag-icons": "^7.5.0",
     "lucide-react": "^1.33.0",
     "next": "16.3.2",
     "pg": "^8.23.0",

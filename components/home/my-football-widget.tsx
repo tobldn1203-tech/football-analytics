@@ -8,6 +8,7 @@ import type { RankedPlayer } from "@/lib/analytics/scoring/types";
 import { qualityLabelFor } from "@/lib/analytics/scoring/types";
 import { TeamCrest } from "@/components/identity/team-crest";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
+import { NationalityFlag } from "@/components/identity/nationality-flag";
 import { getTeamColor } from "@/lib/competitions/teamBranding";
 
 /**
@@ -73,7 +74,10 @@ export function MyFootballWidget({
             <Link href={`/players/${standout.slug}`} className="flex items-center gap-2.5 hover:opacity-80">
               <PlayerAvatar photoUrl={standout.photoUrl} name={standout.name} teamShortName={standout.teamShortName} size="md" />
               <span>
-                <span className="block text-[13.5px] font-medium text-[var(--color-ink)]">{standout.name}</span>
+                <span className="flex items-center gap-1.5 text-[13.5px] font-medium text-[var(--color-ink)]">
+                  <NationalityFlag code={standout.nationalityCode} country={standout.nationality} size="xs" />
+                  {standout.name}
+                </span>
                 <span className="block text-[11.5px] text-[var(--color-ink-faint)]">
                   {(standout.scores.overall ?? 0).toFixed(1)} · {qualityLabelFor(standout.scores.overall ?? 0)}
                 </span>

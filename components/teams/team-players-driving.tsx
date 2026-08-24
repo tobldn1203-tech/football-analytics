@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
+import { NationalityFlag } from "@/components/identity/nationality-flag";
 import { POSITION_LABEL } from "@/lib/competitions/premier-league";
 import type { RankedPlayer, Category } from "@/lib/analytics/scoring/types";
 
@@ -38,7 +39,10 @@ export function TeamPlayersDriving({
                 <span aria-hidden="true">{s.icon}</span>
                 {s.label}
               </div>
-              <div className="truncate text-[14px] font-medium text-[var(--color-ink)]">{player.name}</div>
+              <div className="flex items-center gap-1.5 truncate text-[14px] font-medium text-[var(--color-ink)]">
+                <NationalityFlag code={player.nationalityCode} country={player.nationality} size="xs" />
+                <span className="truncate">{player.name}</span>
+              </div>
               <div className="text-[11.5px] text-[var(--color-ink-faint)]">{POSITION_LABEL[player.position]}</div>
             </div>
             <div className="shrink-0 font-display text-[17px] font-semibold tabular text-[var(--color-accent)]">{score.toFixed(1)}</div>

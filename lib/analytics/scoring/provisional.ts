@@ -74,6 +74,8 @@ export interface PlayerPerformanceInput {
   /** Pass-through identity imagery — see lib/assets/images.ts. Not analytics. */
   photoUrl: string | null;
   teamCrestUrl: string | null;
+  nationality?: string | null;
+  nationalityCode?: string | null;
   /** Season-to-date totals (not per-90 — this module derives rates itself). */
   season: {
     minutes: number;
@@ -239,6 +241,8 @@ export function computeProvisionalRankings(
       teamShortName: p.teamShortName,
       photoUrl: p.photoUrl,
       teamCrestUrl: p.teamCrestUrl,
+      nationality: p.nationality,
+      nationalityCode: p.nationalityCode,
       position: p.position,
       sample: {
         matches: p.season.matches,

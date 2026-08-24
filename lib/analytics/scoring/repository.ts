@@ -57,6 +57,8 @@ export interface PlayerProfileData {
     position: PositionCode;
     photoUrl: string | null;
     teamCrestUrl: string | null;
+    nationality: string | null;
+    nationalityCode: string | null;
   };
   /** Null if the player hasn't yet met the minimum-minutes threshold for ranking. */
   ranking: RankedPlayer | null;
@@ -125,6 +127,8 @@ export async function getPlayerProfile(slug: string): Promise<PlayerProfileData 
       position: player.position as PositionCode,
       photoUrl: getPlayerPhotoUrl(player.photoCode),
       teamCrestUrl: getTeamCrestUrl(player.team.crestCode),
+      nationality: player.nationality,
+      nationalityCode: player.nationalityCode,
     },
     ranking,
     matches,

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
 import { TeamCrest } from "@/components/identity/team-crest";
+import { NationalityFlag } from "@/components/identity/nationality-flag";
 import { getTeamColor } from "@/lib/competitions/teamBranding";
 import type { PerformanceLeader, PerformanceLeaders as PerformanceLeadersData } from "@/lib/analytics/scoring/matchRepository";
 
@@ -56,7 +57,10 @@ function LeaderRow({ icon, label, leader }: { icon: string; label: string; leade
       </span>
       <PlayerAvatar photoUrl={leader.photoUrl} name={leader.name} teamShortName="" size="sm" />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-medium text-[var(--color-ink)]">{leader.name}</span>
+        <span className="flex items-center gap-1.5 truncate text-[13px] font-medium text-[var(--color-ink)]">
+          <NationalityFlag code={leader.nationalityCode} country={leader.nationality} size="xs" />
+          <span className="truncate">{leader.name}</span>
+        </span>
         <span className="block text-[11px] text-[var(--color-ink-faint)]">{label}</span>
       </span>
       <span className="shrink-0 font-display text-[15px] font-semibold tabular text-[var(--color-info)]">

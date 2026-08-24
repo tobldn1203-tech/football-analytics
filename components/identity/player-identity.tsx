@@ -1,5 +1,6 @@
 import { PlayerAvatar } from "./player-avatar";
 import { TeamCrest } from "./team-crest";
+import { NationalityFlag } from "./nationality-flag";
 
 /**
  * Photo + name + a small club crest badge, used in every ranking/list
@@ -11,6 +12,8 @@ export function PlayerIdentity({
   name,
   crestUrl,
   teamShortName,
+  nationality,
+  nationalityCode,
   size = "md",
   subtitle,
   showTeamBadge = true,
@@ -19,6 +22,8 @@ export function PlayerIdentity({
   name: string;
   crestUrl: string | null;
   teamShortName: string;
+  nationality?: string | null;
+  nationalityCode?: string | null;
   size?: "sm" | "md" | "lg";
   subtitle?: string;
   showTeamBadge?: boolean;
@@ -34,7 +39,10 @@ export function PlayerIdentity({
         )}
       </span>
       <span className="flex flex-col">
-        <span className="font-medium text-[var(--color-ink)]">{name}</span>
+        <span className="inline-flex items-center gap-1.5">
+          <NationalityFlag code={nationalityCode} country={nationality} size="xs" />
+          <span className="font-medium text-[var(--color-ink)]">{name}</span>
+        </span>
         {subtitle && (
           <span className="text-[12px] text-[var(--color-ink-faint)]">{subtitle}</span>
         )}

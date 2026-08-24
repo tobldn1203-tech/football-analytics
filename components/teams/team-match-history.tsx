@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TeamCrest } from "@/components/identity/team-crest";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
+import { NationalityFlag } from "@/components/identity/nationality-flag";
 import type { TeamMatchHistoryEntry } from "@/lib/analytics/scoring/teamRepository";
 
 const RESULT_COLOR: Record<"W" | "D" | "L", string> = {
@@ -52,7 +53,8 @@ export function TeamMatchHistory({ matches, teamShortName }: { matches: TeamMatc
               <span className="text-[9.5px] uppercase tracking-[0.04em] text-[var(--color-ink-faint)]">Best performer</span>
               <span className="flex items-center gap-1.5">
                 <PlayerAvatar photoUrl={m.bestPerformer.photoUrl} name={m.bestPerformer.name} teamShortName={teamShortName} size="sm" />
-                <span className="max-w-[90px] truncate text-[12px] font-medium text-[var(--color-ink)]">{m.bestPerformer.name}</span>
+                <NationalityFlag code={m.bestPerformer.nationalityCode} country={m.bestPerformer.nationality} size="xs" />
+                <span className="max-w-[80px] truncate text-[12px] font-medium text-[var(--color-ink)]">{m.bestPerformer.name}</span>
               </span>
             </div>
           )}
