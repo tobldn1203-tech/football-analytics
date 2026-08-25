@@ -5,6 +5,8 @@ import {
   intelligenceFromProfile,
   pickBestPerformances,
 } from "@/lib/analytics/scoring/repository";
+import { getPlayerAvailability } from "@/lib/analytics/availability/repository";
+import { PlayerAvailabilityLine } from "@/components/players/availability-indicator";
 import { POSITION_LABEL } from "@/lib/competitions/premier-league";
 import { getTeamColor } from "@/lib/competitions/teamBranding";
 import { qualityLabelFor, confidenceTone } from "@/lib/analytics/scoring/types";
@@ -54,6 +56,12 @@ export default async function PlayerProfilePage({
   const intel = intelligenceFromProfile(data);
   const story = ranking && intel ? buildSeasonStory(ranking, intel, player.teamName) : null;
   const archetype = ranking ? classifyArchetype(ranking) : null;
+  // Availability Intelligence — deliberately independent of `ranking`/
+  // `intel` above: a player with no computed Performance score yet can
+  // still have a meaningful availability status, and vice versa. See
+  // docs/PLAYER_AVAILABILITY_IMPLEMENTATION.md §5 for why this is not
+  // gated by relevance on an individual player's own page.
+  const availability = await getPlayerAvailability(player.id);
 
   const totals = matches.reduce(
     (acc, m) => ({
@@ -154,6 +162,8 @@ export default async function PlayerProfilePage({
             </div>
           )}
         </div>
+
+        <PlayerAvailabilityLine availability={availability} />
 
         {ranking && ranking.sample.confidence !== "established" && (
           <p className="relative mt-4 flex items-center gap-1.5 text-[12.5px] text-[var(--hero-ink-faint)]">

@@ -8,6 +8,7 @@ import { ingestTeams } from "./ingestTeams";
 import { ingestPlayers } from "./ingestPlayers";
 import { ingestFixtures } from "./ingestFixtures";
 import { ingestGameweekStats } from "./ingestGameweekStats";
+import { ingestPlayerNews } from "./ingestPlayerNews";
 
 /**
  * Runs the full FPL ingestion pipeline in dependency order. Every step
@@ -39,6 +40,13 @@ export async function runFplIngestion() {
     return { recordsWritten: n, result: n };
   });
 
+  // News Layer, Phase 1 — see docs/NEWS_LAYER_RESEARCH.md. Reuses the same
+  // bootstrap payload already fetched above; no new request, no new source.
+  const newsItemsWritten = await logIngestion("player-news", async () => {
+    const n = await ingestPlayerNews(bootstrap.elements);
+    return { recordsWritten: n, result: n };
+  });
+
   const fixtures = await fetchFplFixtures();
   const fixtureResult = await logIngestion("fixtures", async () => {
     const r = await ingestFixtures(fixtures, competition.id, season.id);
@@ -61,6 +69,7 @@ export async function runFplIngestion() {
     season: season.label,
     teamsWritten,
     playersWritten,
+    newsItemsWritten,
     matchesWritten: fixtureResult.matchesWritten,
     eventAttributionsWritten: fixtureResult.performancesWritten,
     gameweekStatsWritten: gwStatsWritten,

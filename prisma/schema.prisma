@@ -65,6 +65,7 @@ model Team {
   homeMatches   Match[]                @relation("HomeTeam")
   awayMatches   Match[]                @relation("AwayTeam")
   performances  TeamMatchPerformance[]
+  newsItems     NewsItem[]
 
   @@unique([provider, externalId])
   @@index([competitionId])
@@ -82,6 +83,13 @@ model Player {
   displayName   String // short/display name shown in the UI
   position      String
   status        String // "a" available, "i" injured, "s" suspended, ...
+  /// FPL's own numeric availability signal — 0/25/50/75/100, or null.
+  /// See docs/PLAYER_AVAILABILITY_IMPLEMENTATION.md §1: verified against
+  /// live data to be fully redundant with `status` except when status is
+  /// "d" (doubtful), where it is the only place a graded distinction
+  /// (25/50/75) exists. Always refreshed on ingestion — this is FPL's
+  /// current live figure, never a historical snapshot.
+  chanceOfPlayingNextRound Int?
   /// Provider's photo asset code (see lib/assets) — an identity/imagery
   /// field, not an analytical statistic.
   photoCode     String?
@@ -107,6 +115,7 @@ model Player {
   competition   Competition @relation(fields: [competitionId], references: [id])
 
   performances PlayerMatchPerformance[]
+  newsItems    NewsItem[]
 
   @@unique([provider, externalId])
   @@index([teamId])
@@ -132,6 +141,7 @@ model Match {
 
   playerPerformances PlayerMatchPerformance[]
   teamPerformances   TeamMatchPerformance[]
+  newsItems          NewsItem[]
 
   @@unique([provider, externalId])
   @@index([seasonId])
@@ -186,6 +196,18 @@ model PlayerMatchPerformance {
   defensiveActions    Float   @default(0) // FPL "defensive contribution" proxy (CBI/tackles/recoveries)
   ictIndex            Float   @default(0)
 
+  /// Component breakdown of `defensiveActions` above — tackles, clearances/
+  /// blocks/interceptions, and ball recoveries, each reported separately by
+  /// FPL's per-gameweek live endpoint but previously discarded on
+  /// ingestion. See docs/PLAYER_INTELLIGENCE_ACCURACY_AUDIT.md §9. Nullable
+  /// with NO default: null means "not yet captured for this row" (every
+  /// row ingested before this field existed), never "known to be zero" —
+  /// existing analytics do not read these fields at all; they exist purely
+  /// as richer raw data for a future, separate methodology review.
+  tackles                       Int?
+  clearancesBlocksInterceptions Int?
+  recoveries                    Int?
+
   updatedAt DateTime @updatedAt
 
   @@unique([playerId, matchId])
@@ -218,4 +240,76 @@ model IngestionLog {
   message         String?
 
   @@index([provider, task, startedAt])
+}
+
+/// NEWS LAYER — Phase 1. See docs/NEWS_LAYER_RESEARCH.md for why this
+/// starts narrower than a general multi-publisher news feed: every
+/// commercial news API and reputable RSS feed investigated either forbids
+/// production/commercial use on its free tier or requires a paid business
+/// licence for exactly this kind of redistribution. Phase 1 is built
+/// entirely on FPL's own player `news`/`news_added` fields instead — data
+/// already inside this project's existing, legitimate FPL relationship,
+/// with exact (not fuzzy) player association by construction.
+///
+/// Deliberately shaped as a generic "news item" (provider/category/title/
+/// description/url/imageUrl/sourceName/publishedAt + optional player/team/
+/// match associations) rather than an FPL-specific table, so a future,
+/// separately-licensed editorial source (see the research doc's §7) can
+/// reuse this same model without a schema rewrite — `url`/`imageUrl` are
+/// nullable specifically because FPL's own notes have neither.
+model NewsItem {
+  id       String @id @default(cuid())
+  /// "fpl" for Phase 1. A future licensed source would use its own value
+  /// here (e.g. "guardian") — never mixed with FPL's own semantics.
+  provider String
+  /// Dedup / idempotency key, unique per provider. For FPL: playerId +
+  /// the exact news_added timestamp, so an unchanged note is never
+  /// re-inserted, and an updated note (new news_added) creates a new,
+  /// distinct historical row rather than overwriting the old one.
+  externalId String
+
+  /// "injury" | "suspension" | "transfer" | "availability" | "general" —
+  /// see docs/NEWS_LAYER_RESEARCH.md §6 for which of these FPL's own data
+  /// can actually support today. Never invented beyond what the source
+  /// evidences.
+  category    String
+  /// A short, synthesized label (e.g. "Injury update") — FPL provides no
+  /// headline of its own, so this is generated from `category`, not from
+  /// any external editorial source. Kept distinct from `description` so a
+  /// future editorial source's real headline fits the same field.
+  title       String
+  /// The actual source text — for FPL, exactly the `news` field, verbatim,
+  /// never paraphrased or embellished.
+  description String
+  /// Nullable: FPL's notes don't link to an external article.
+  url         String?
+  /// Nullable: FPL's notes carry no image.
+  imageUrl    String?
+  /// Human-readable attribution shown in the UI — "Fantasy Premier League"
+  /// for Phase 1. Every news item must be able to show where it came from.
+  sourceName  String
+  /// When the underlying source considers this current — FPL's
+  /// `news_added` for Phase 1. Drives freshness windows; never defaults to
+  /// "now" for older source data.
+  publishedAt DateTime
+  fetchedAt   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  /// Associations are deliberately optional and independent — a news item
+  /// may relate to a player, a team, a match, or (rare, not used in Phase
+  /// 1) none of these. Never inferred beyond what the source directly
+  /// evidences — see docs/NEWS_LAYER_RESEARCH.md on entity matching.
+  playerId String?
+  player   Player? @relation(fields: [playerId], references: [id])
+  teamId   String?
+  team     Team?   @relation(fields: [teamId], references: [id])
+  matchId  String?
+  match    Match?  @relation(fields: [matchId], references: [id])
+
+  @@unique([provider, externalId])
+  @@index([playerId])
+  @@index([teamId])
+  @@index([matchId])
+  @@index([publishedAt])
 }

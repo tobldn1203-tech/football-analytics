@@ -154,7 +154,53 @@ function averagePercentilesTo10(percentileArrays: number[][]): number[] {
   });
 }
 
-/** Defence metrics differ by position — this is the one category kept position-relative. */
+/**
+ * DEFENCE TEAM-OUTCOME WEIGHTING — experimental, post-audit
+ * ==========================================================================
+ * See docs/DEFENCE_METHODOLOGY_AUDIT.md. GKP and DEF Defence blends an
+ * individual signal (saves / defensiveActions) with a team-level clean-sheet
+ * signal — the original methodology weighted these 50/50, which the audit
+ * found systematically suppresses strong individual performances when the
+ * team concedes (e.g. Lacroix, and more severely O'Shea/Senesi/Richards in
+ * GW1 — 19/87 defenders lost 15+ percentile points this way) and inflates
+ * weak individual performances when the team keeps a clean sheet (e.g.
+ * Dunk — 12/87 defenders gained 15+ points this way).
+ *
+ * These two constants are the audit's single most promising experiment —
+ * NOT a validated final formula. They were tested against exactly one
+ * completed gameweek (see the audit's §5 candidate comparison and §10
+ * recommendation). Revisit once GW2+ arrives: rerun
+ * scripts/audit-defence-methodology.ts's --compare-weighting mode and
+ * confirm this ratio (or a better one) still behaves well across a larger
+ * sample before treating it as settled.
+ *
+ * To restore the original methodology, set these back to 0.5 / 0.5 — no
+ * other part of the formula needs to change either way. They must sum to 1.
+ */
+const INDIVIDUAL_DEFENCE_WEIGHT = 0.7;
+const TEAM_CLEAN_SHEET_WEIGHT = 0.3;
+
+/**
+ * Weighted variant of averagePercentilesTo10, used ONLY for the GKP/DEF
+ * Defence blend above — every other category (Attack, Creation, Impact,
+ * Form, and MID/FWD Defence, which has no team component at all and never
+ * reaches this function) continues through the plain, unweighted
+ * averagePercentilesTo10 exactly as before.
+ */
+function weightedAveragePercentilesTo10(
+  individualPercentiles: number[],
+  teamPercentiles: number[],
+  individualWeight: number,
+  teamWeight: number
+): number[] {
+  return individualPercentiles.map(
+    (v, i) => (v * individualWeight + teamPercentiles[i] * teamWeight) / 10
+  );
+}
+
+/** Defence metrics differ by position — this is the one category kept position-relative.
+ *  Where two metrics are returned, the first is always the individual signal and the
+ *  second always the team clean-sheet signal — see weightedAveragePercentilesTo10 above. */
 function defenceMetricsForPosition(position: PositionCode): Array<keyof Per90Metrics> {
   if (position === "GKP") return ["saves", "cleanSheets"];
   if (position === "DEF") return ["defensiveActions", "cleanSheets"];
@@ -208,11 +254,22 @@ export function computeProvisionalRankings(
   }
   for (const [position, players] of byPosition) {
     const metrics = defenceMetricsForPosition(position);
-    const defenceForGroup = averagePercentilesTo10(
-      metrics.map((metric) =>
-        percentileRank(players.map((p) => per90ByPlayer.get(p.id)![metric]))
-      )
+    const percentileArrays = metrics.map((metric) =>
+      percentileRank(players.map((p) => per90ByPlayer.get(p.id)![metric]))
     );
+    // Two metrics only ever means [individual, team clean sheet] — see
+    // defenceMetricsForPosition's comment — so this is exactly where the
+    // experimental weighting applies. MID/FWD (one metric, no team signal
+    // at all) fall through to the unweighted average, unchanged.
+    const defenceForGroup =
+      percentileArrays.length === 2
+        ? weightedAveragePercentilesTo10(
+            percentileArrays[0],
+            percentileArrays[1],
+            INDIVIDUAL_DEFENCE_WEIGHT,
+            TEAM_CLEAN_SHEET_WEIGHT
+          )
+        : averagePercentilesTo10(percentileArrays);
     players.forEach((p, i) => defenceScoreByPlayerId.set(p.id, defenceForGroup[i]));
   }
 
@@ -270,5 +327,5 @@ function round1(n: number): number {
   return Math.round(n * 10) / 10;
 }
 
-export { MIN_MINUTES };
+export { MIN_MINUTES, INDIVIDUAL_DEFENCE_WEIGHT, TEAM_CLEAN_SHEET_WEIGHT };
 export type { Category };

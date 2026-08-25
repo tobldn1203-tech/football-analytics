@@ -52,6 +52,17 @@ export const FplPlayerSchema = z.object({
   /// FPL also exposes an undocumented `region` integer with no reliable
   /// public country mapping; deliberately not modelled here at all.
   birth_date: z.string().nullable().optional(),
+  /// FPL's own short editorial status note (injury/suspension/transfer),
+  /// e.g. "Groin injury - Unknown return date" — see
+  /// docs/NEWS_LAYER_RESEARCH.md §6 and lib/ingestion/fpl/ingestPlayerNews.ts.
+  /// Empty string when there's nothing to report; never fabricated.
+  news: z.string().nullable().optional(),
+  /// Timestamp the `news` text was last set/changed — used both as the
+  /// News Layer's publishedAt and as the dedup key (a new value here means
+  /// FPL updated the note, so it's a new news item; an unchanged value
+  /// means nothing changed since the last ingestion run).
+  news_added: z.string().nullable().optional(),
+  chance_of_playing_next_round: z.number().nullable().optional(),
 });
 export type FplPlayer = z.infer<typeof FplPlayerSchema>;
 
@@ -102,6 +113,15 @@ export const FplEventLiveElementSchema = z.object({
     expected_assists: numericString,
     expected_goals_conceded: numericString,
     defensive_contribution: z.number().optional().default(0),
+    // Component breakdown of defensive_contribution — reported separately by
+    // this same endpoint but previously discarded on ingestion. See
+    // docs/PLAYER_INTELLIGENCE_ACCURACY_AUDIT.md §9. Not consumed by any
+    // scoring formula yet; stored as richer raw data only. Same
+    // optional/default(0) convention as defensive_contribution above, for
+    // the rare case a provider payload omits one.
+    tackles: z.number().optional().default(0),
+    clearances_blocks_interceptions: z.number().optional().default(0),
+    recoveries: z.number().optional().default(0),
     ict_index: numericString,
   }),
 });
