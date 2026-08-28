@@ -6,6 +6,7 @@ import { useDirectory } from "@/components/personalisation/personalisation-provi
 import type { ClubFixtureSnapshot } from "@/lib/analytics/scoring/matchRepository";
 import type { RankedPlayer } from "@/lib/analytics/scoring/types";
 import { qualityLabelFor } from "@/lib/analytics/scoring/types";
+import type { WorthKnowingInsight } from "@/lib/analytics/availability/worthKnowing";
 import { TeamCrest } from "@/components/identity/team-crest";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
 import { NationalityFlag } from "@/components/identity/nationality-flag";
@@ -24,11 +25,14 @@ export function MyFootballWidget({
   fixtures,
   standoutByTeam,
   insightByTeam = {},
+  worthKnowingByTeam = {},
 }: {
   fixtures: Record<string, ClubFixtureSnapshot>;
   standoutByTeam: Record<string, RankedPlayer>;
   /** One cheap, already-computed line per team (e.g. its leading category this season) — see app/page.tsx. Never a new analysis, just a sentence over numbers already in memory there. */
   insightByTeam?: Record<string, string>;
+  /** Availability × performance insight per team, keyed the same way — see lib/analytics/availability/worthKnowing.ts. Only present for a club when there's genuinely something noteworthy; absent otherwise. */
+  worthKnowingByTeam?: Record<string, WorthKnowingInsight>;
 }) {
   const preferences = usePreferences();
   const { teams } = useDirectory();
@@ -39,6 +43,7 @@ export function MyFootballWidget({
   const snapshot = fixtures[club.id];
   const standout = standoutByTeam[club.shortName];
   const insight = insightByTeam[club.shortName];
+  const worthKnowing = worthKnowingByTeam[club.shortName];
   const accent = getTeamColor(club.shortName);
 
   const ctaHref = snapshot?.next ? `/match/${snapshot.next.matchId}` : snapshot?.last ? `/match/${snapshot.last.matchId}` : "/matches";
@@ -93,6 +98,16 @@ export function MyFootballWidget({
           </div>
         )}
       </div>
+
+      {worthKnowing && (
+        <div className="border-t border-[var(--color-border)] px-5 py-3.5 sm:px-6">
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-[var(--color-ink-faint)]">Worth knowing</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-[var(--color-ink)]">{worthKnowing.headline}</p>
+          {worthKnowing.voice && (
+            <p className="mt-0.5 text-[11.5px] italic text-[var(--color-ink-faint)]">{worthKnowing.voice.observation}</p>
+          )}
+        </div>
+      )}
 
       <Link
         href={ctaHref}

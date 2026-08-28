@@ -1,5 +1,8 @@
 import { getTopPerformers, getHomepageDiscover } from "@/lib/analytics/scoring/repository";
 import { getAllClubFixtureSnapshots, type ClubFixtureSnapshot } from "@/lib/analytics/scoring/matchRepository";
+import { getPlayerAvailabilityMap } from "@/lib/analytics/availability/repository";
+import { getAllTeams } from "@/lib/directory/repository";
+import { buildWorthKnowingInsight, type WorthKnowingInsight } from "@/lib/analytics/availability/worthKnowing";
 import { TopPerformers } from "@/components/home/top-performers";
 import { DiscoverTeaser } from "@/components/home/discover-teaser";
 import { MyFootballWidget } from "@/components/home/my-football-widget";
@@ -13,13 +16,16 @@ export default async function Home() {
   let fixtures: Record<string, ClubFixtureSnapshot> = {};
   let standoutByTeam: Record<string, RankedPlayer> = {};
   let insightByTeam: Record<string, string> = {};
+  let worthKnowingByTeam: Record<string, WorthKnowingInsight> = {};
 
   try {
-    const [{ players, sampleNote }, discoverData, fixtureSnapshots] = await Promise.all([
+    const [{ players, sampleNote }, discoverData, fixtureSnapshots, teamDirectory] = await Promise.all([
       getTopPerformers(),
       getHomepageDiscover(),
       getAllClubFixtureSnapshots(),
+      getAllTeams(),
     ]);
+    const teamNameByShortName = new Map(teamDirectory.map((t) => [t.shortName, t.name]));
     discover = discoverData;
     fixtures = fixtureSnapshots;
 
@@ -59,6 +65,25 @@ export default async function Home() {
       }
     }
 
+    // "Worth knowing" — availability cross-referenced against each
+    // player's own already-computed Performance score above, exactly the
+    // primitive Team Intelligence uses (see
+    // lib/analytics/availability/worthKnowing.ts). One availability query
+    // for every player league-wide, since personalisation is client-only
+    // (localStorage) — the server can't know which club to compute this
+    // for ahead of time, so every club gets one, same pattern as
+    // `standoutByTeam`/`insightByTeam` above.
+    const playersByTeam: Record<string, RankedPlayer[]> = {};
+    for (const player of players) {
+      (playersByTeam[player.teamShortName] ??= []).push(player);
+    }
+    const availabilityMap = await getPlayerAvailabilityMap(players.map((p) => p.playerId));
+    for (const [teamShortName, teamPlayers] of Object.entries(playersByTeam)) {
+      const teamName = teamNameByShortName.get(teamShortName) ?? teamShortName;
+      const insight = buildWorthKnowingInsight(teamName, teamPlayers, availabilityMap);
+      if (insight) worthKnowingByTeam[teamShortName] = insight;
+    }
+
     if (players.length === 0) {
       content = (
         <div className="rounded-sm border border-dashed border-[var(--color-border-strong)] px-5 py-10 text-center text-[14px] text-[var(--color-ink-faint)]">
@@ -91,7 +116,12 @@ export default async function Home() {
         </span>
       </div>
 
-      <MyFootballWidget fixtures={fixtures} standoutByTeam={standoutByTeam} insightByTeam={insightByTeam} />
+      <MyFootballWidget
+        fixtures={fixtures}
+        standoutByTeam={standoutByTeam}
+        insightByTeam={insightByTeam}
+        worthKnowingByTeam={worthKnowingByTeam}
+      />
 
       {discover && <DiscoverTeaser discover={discover} />}
 

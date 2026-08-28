@@ -37,6 +37,9 @@ export interface GameweekSummary {
   gameweek: number;
   fixtureCount: number;
   finishedCount: number;
+  /** Earliest/latest fixture kickoff in this gameweek — see currentGameweek.ts, which uses these to pick /matches' default. Always present since every gameweek here has at least one fixture. */
+  earliestKickoff: string;
+  latestKickoff: string;
 }
 
 /** All gameweeks with at least one fixture in the current season, ascending. */
@@ -46,21 +49,37 @@ export async function getAvailableGameweeks(): Promise<GameweekSummary[]> {
 
   const matches = await prisma.match.findMany({
     where: { seasonId: season.id, gameweek: { not: null } },
-    select: { gameweek: true, status: true },
+    select: { gameweek: true, status: true, kickoff: true },
   });
 
-  const byGameweek = new Map<number, { fixtureCount: number; finishedCount: number }>();
+  const byGameweek = new Map<
+    number,
+    { fixtureCount: number; finishedCount: number; earliestKickoff: Date; latestKickoff: Date }
+  >();
   for (const m of matches) {
     const gw = m.gameweek!;
-    const entry = byGameweek.get(gw) ?? { fixtureCount: 0, finishedCount: 0 };
+    const entry = byGameweek.get(gw) ?? {
+      fixtureCount: 0,
+      finishedCount: 0,
+      earliestKickoff: m.kickoff,
+      latestKickoff: m.kickoff,
+    };
     entry.fixtureCount++;
     if (m.status === "finished") entry.finishedCount++;
+    if (m.kickoff < entry.earliestKickoff) entry.earliestKickoff = m.kickoff;
+    if (m.kickoff > entry.latestKickoff) entry.latestKickoff = m.kickoff;
     byGameweek.set(gw, entry);
   }
 
   return [...byGameweek.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([gameweek, counts]) => ({ gameweek, ...counts }));
+    .map(([gameweek, entry]) => ({
+      gameweek,
+      fixtureCount: entry.fixtureCount,
+      finishedCount: entry.finishedCount,
+      earliestKickoff: entry.earliestKickoff.toISOString(),
+      latestKickoff: entry.latestKickoff.toISOString(),
+    }));
 }
 
 export async function getGameweekFixtures(gameweek: number): Promise<FixtureCard[]> {

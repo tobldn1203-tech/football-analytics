@@ -181,6 +181,8 @@ export interface TeamProfileData {
   momentum: MomentumMetric;
   story: string;
   players: TeamPlayersDriving;
+  /** Every one of the club's players who has cleared the ranking engine's minutes floor — the full list `players` above picks its 5 highlights from. Exposed so a caller can cross-reference against other per-player data (e.g. availability) without a second ranking computation. */
+  teamPlayers: RankedPlayer[];
   matchHistory: TeamMatchHistoryEntry[];
   nextFixture: { matchId: string; opponentShortName: string; opponentCrestUrl: string | null; isHome: boolean; kickoff: string } | null;
 }
@@ -327,6 +329,7 @@ export async function getTeamProfile(teamId: string): Promise<TeamProfileData | 
     momentum,
     story,
     players,
+    teamPlayers,
     matchHistory,
     nextFixture,
   };

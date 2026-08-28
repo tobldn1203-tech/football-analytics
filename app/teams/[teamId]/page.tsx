@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTeamProfile, getLeagueStandings } from "@/lib/analytics/scoring/teamRepository";
+import { getPlayerAvailabilityMap } from "@/lib/analytics/availability/repository";
+import { buildWorthKnowingInsight } from "@/lib/analytics/availability/worthKnowing";
+import { TeamWorthKnowing } from "@/components/teams/team-worth-knowing";
 import { TeamCrest } from "@/components/identity/team-crest";
 import { MatchTrend } from "@/components/charts/match-trend";
 import { TrendBadge } from "@/components/ui/trend-badge";
@@ -19,7 +22,14 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
   const [data, standings] = await Promise.all([getTeamProfile(teamId), getLeagueStandings()]);
   if (!data) notFound();
 
-  const { team, totalTeams, standing, seasonScores, sample, qualityLabel, strengths, developmentAreas, momentum, story, players, matchHistory, nextFixture } = data;
+  const { team, totalTeams, standing, seasonScores, sample, qualityLabel, strengths, developmentAreas, momentum, story, players, teamPlayers, matchHistory, nextFixture } = data;
+
+  // "Worth knowing" — availability cross-referenced against each player's
+  // own already-computed Performance score. See
+  // lib/analytics/availability/worthKnowing.ts; this reuses the exact
+  // same primitive/insight function My Football uses (app/page.tsx).
+  const availabilityMap = await getPlayerAvailabilityMap(teamPlayers.map((p) => p.playerId));
+  const worthKnowing = buildWorthKnowingInsight(team.name, teamPlayers, availabilityMap);
 
   const journeyPoints = [...matchHistory]
     .reverse() // oldest first
@@ -95,6 +105,9 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
 
       {/* TEAM OVERVIEW — the interpretation, up front */}
       <TeamOverview story={story} strengths={strengths} developmentAreas={developmentAreas} />
+
+      {/* AVAILABILITY WATCH — only rendered when genuinely noteworthy */}
+      <TeamWorthKnowing insight={worthKnowing} />
 
       {/* PERFORMANCE PROFILE — the same scores, presented as read-outs, not attribute cards */}
       <section className="mt-9">
