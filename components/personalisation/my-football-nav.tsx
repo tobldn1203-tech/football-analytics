@@ -8,8 +8,16 @@ import { PreferencesModal } from "./preferences-modal";
 import { clearSupportedClub } from "@/lib/preferences/store";
 import { TeamCrest } from "@/components/identity/team-crest";
 
-/** The header's entry point into personalisation — pick, change or remove the supported club. Never a settings page. */
-export function MyFootballNav() {
+/**
+ * The header's entry point into personalisation — pick, change or remove
+ * the supported club. Never a settings page.
+ *
+ * `isActive` (computed by the header — see components/layout/header-nav.tsx
+ * for exactly which route counts) gets the same treatment as the other
+ * nav items: full-strength ink colour, medium weight, and the same quiet
+ * accent underline — never a new visual language of its own.
+ */
+export function MyFootballNav({ isActive = false }: { isActive?: boolean }) {
   const preferences = usePreferences();
   const { teams } = useDirectory();
   const [open, setOpen] = useState(false);
@@ -41,8 +49,11 @@ export function MyFootballNav() {
       <button
         onClick={() => (club ? setOpen((v) => !v) : setPicking(true))}
         aria-label="My Football"
+        aria-current={isActive ? "page" : undefined}
         title="My Football"
-        className="flex shrink-0 items-center gap-1.5 py-2 text-[13.5px] font-medium text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] sm:py-0 sm:text-[14px]"
+        className={`flex shrink-0 items-center gap-1.5 py-2 text-[13.5px] transition-colors sm:py-0 sm:text-[14px] ${
+          isActive ? "font-semibold text-[var(--color-ink)]" : "font-medium text-[var(--color-ink-faint)] hover:text-[var(--color-ink)]"
+        }`}
       >
         {club ? (
           <TeamCrest crestUrl={club.crestUrl} shortName={club.shortName} size="sm" />
@@ -51,6 +62,12 @@ export function MyFootballNav() {
         )}
         <span className="hidden sm:inline">My Football</span>
       </button>
+      {isActive && (
+        <span
+          className="pointer-events-none absolute -bottom-1 left-0 right-0 h-[2px] rounded-full bg-[var(--color-accent)]"
+          aria-hidden="true"
+        />
+      )}
 
       {open && club && (
         <div className="absolute right-0 top-full z-40 mt-2 w-60 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xl">
