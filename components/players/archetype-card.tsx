@@ -37,11 +37,15 @@ export function ArchetypeBadge({ archetype }: { archetype: PlayerArchetype }) {
   );
 }
 
-/** Fuller card for the page body — label, qualifier, description, and the raw shape for anyone curious. */
+/**
+ * Fuller card for the page body — label, qualifier, description. No
+ * longer plots Attack/Creation/Defence shape bars here: those are the
+ * exact same three numbers the Analytical Breakdown section (just below,
+ * on the player page) already shows properly, with quality labels — see
+ * docs/PLAYER_TEAM_INFORMATION_DENSITY_AUDIT.md Part 2. This card's job
+ * is purely "what kind of player is this", in words.
+ */
 export function ArchetypeCard({ archetype }: { archetype: PlayerArchetype }) {
-  const { attack, creation, defence } = archetype.dimensions;
-  const showShape = archetype.key !== "shot_stopper" && archetype.key !== null;
-
   return (
     <section className="mt-8 rounded-xl border border-[var(--color-border)] px-5 py-5 sm:px-6">
       <h3 className="mb-3 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-[var(--color-ink-faint)]">
@@ -61,33 +65,8 @@ export function ArchetypeCard({ archetype }: { archetype: PlayerArchetype }) {
             )}
           </div>
           <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--color-ink-soft)]">{archetype.description}</p>
-
-          {showShape && (
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              <ShapeBar label="Attack" value={attack} />
-              <ShapeBar label="Creation" value={creation} />
-              <ShapeBar label="Defence" value={defence} />
-            </div>
-          )}
         </div>
       </div>
     </section>
-  );
-}
-
-function ShapeBar({ label, value }: { label: string; value: number }) {
-  return (
-    <div>
-      <div className="mb-1 flex items-baseline justify-between">
-        <span className="text-[11px] text-[var(--color-ink-faint)]">{label}</span>
-        <span className="text-[11px] tabular text-[var(--color-ink-faint)]">{value.toFixed(1)}</span>
-      </div>
-      <div className="h-[4px] overflow-hidden rounded-full bg-[var(--color-border)]">
-        <div
-          className="h-full rounded-full bg-[var(--color-ink-faint)]"
-          style={{ width: `${Math.max(2, Math.min(100, value * 10))}%` }}
-        />
-      </div>
-    </div>
   );
 }

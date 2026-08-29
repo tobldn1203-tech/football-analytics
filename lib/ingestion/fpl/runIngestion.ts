@@ -9,6 +9,7 @@ import { ingestPlayers } from "./ingestPlayers";
 import { ingestFixtures } from "./ingestFixtures";
 import { ingestGameweekStats } from "./ingestGameweekStats";
 import { ingestPlayerNews } from "./ingestPlayerNews";
+import { selectGameweeksToRefresh } from "./selectGameweeksToRefresh";
 
 /**
  * Runs the full FPL ingestion pipeline in dependency order. Every step
@@ -53,6 +54,10 @@ export async function runFplIngestion() {
     return { recordsWritten: r.matchesWritten + r.performancesWritten, result: r };
   });
 
+  // Bounded to a small trailing window — see selectGameweeksToRefresh.ts.
+  // Re-fetching every gameweek that has EVER finished this season, on
+  // every single ingestion run, is exactly the unnecessary and growing
+  // cost identified in docs/MATCHDAY_INGESTION_AUDIT.md.
   const finishedGameweeks = [
     ...new Set(
       fixtures
@@ -60,8 +65,9 @@ export async function runFplIngestion() {
         .map((f) => f.event!)
     ),
   ];
+  const gameweeksToRefresh = selectGameweeksToRefresh(finishedGameweeks);
   const gwStatsWritten = await logIngestion("gameweek-stats", async () => {
-    const n = await ingestGameweekStats(finishedGameweeks, season.id);
+    const n = await ingestGameweekStats(gameweeksToRefresh, season.id);
     return { recordsWritten: n, result: n };
   });
 

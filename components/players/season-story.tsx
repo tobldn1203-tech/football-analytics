@@ -2,10 +2,7 @@ import Link from "next/link";
 import { MatchTrend, type MatchTrendPoint } from "@/components/charts/match-trend";
 import { TeamIdentity } from "@/components/identity/team-identity";
 import type { PlayerExplanation } from "@/lib/analytics/scoring/explain";
-import type { PlayerIntelligence } from "@/lib/analytics/intelligence/types";
 import type { PlayerMatchRow } from "@/lib/analytics/scoring/repository";
-import { qualityLabelFor } from "@/lib/analytics/scoring/types";
-import type { RankedPlayer } from "@/lib/analytics/scoring/types";
 
 /**
  * SEASON STORY
@@ -26,8 +23,6 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 
 export function SeasonStory({
   paragraph,
-  ranking,
-  intel,
   totals,
   showCleanSheets,
   journeyPoints,
@@ -35,8 +30,6 @@ export function SeasonStory({
   best,
 }: {
   paragraph: string;
-  ranking: RankedPlayer;
-  intel: PlayerIntelligence;
   totals: { minutes: number; matches: number; goals: number; assists: number; cleanSheets: number };
   showCleanSheets: boolean;
   journeyPoints: MatchTrendPoint[];
@@ -54,24 +47,18 @@ export function SeasonStory({
       </div>
       <p className="text-[15.5px] leading-relaxed text-[var(--color-ink)] sm:text-[16.5px]">{paragraph}</p>
 
-      {/* Supporting elements: Season Performance / Form / Momentum / Consistency */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <MetricChip label="Season Performance" value={(ranking.scores.overall ?? 0).toFixed(1)} sub={qualityLabelFor(ranking.scores.overall ?? 0)} />
-        <MetricChip label="Recent Form" value={intel.form.score.toFixed(1)} sub={intel.form.label} />
-        <MetricChip
-          label="Momentum"
-          value={intel.momentum.available ? intel.momentum.label : "—"}
-          sub={intel.momentum.available ? undefined : "Not enough matches yet"}
-        />
-        <MetricChip
-          label="Consistency"
-          value={intel.consistency.available ? intel.consistency.label : "—"}
-          sub={intel.consistency.available ? undefined : "Not enough data yet"}
-        />
-      </div>
+      {/*
+        Season Performance / Momentum / Consistency are deliberately not
+        repeated here — the hero above already shows the score, the
+        Form/Momentum trend pill, and the consistency line. Re-stating
+        them a few pixels below was the exact duplication identified in
+        docs/PLAYER_TEAM_INFORMATION_DENSITY_AUDIT.md Part 2; Recent
+        Form's actual number (the one thing the hero didn't show) now
+        lives in that same trend pill instead of a fifth chip here.
+      */}
 
       {/* Supporting elements: Appearances / Minutes / Goals / Assists */}
-      <div className="mt-3 flex flex-wrap gap-x-7 gap-y-3 border-t border-[var(--color-border)] pt-4">
+      <div className="mt-5 flex flex-wrap gap-x-7 gap-y-3 border-t border-[var(--color-border)] pt-4">
         <StatTile label="Appearances" value={totals.matches} />
         <StatTile label="Minutes" value={totals.minutes} />
         <StatTile label="Goals" value={totals.goals} />
@@ -147,16 +134,6 @@ export function SeasonStory({
         </div>
       )}
     </section>
-  );
-}
-
-function MetricChip({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="rounded-lg bg-[var(--color-surface-2)] px-3 py-2.5">
-      <div className="text-[10.5px] uppercase tracking-[0.04em] text-[var(--color-ink-faint)]">{label}</div>
-      <div className="mt-0.5 truncate text-[14.5px] font-semibold text-[var(--color-ink)]">{value}</div>
-      {sub && <div className="truncate text-[11px] text-[var(--color-ink-faint)]">{sub}</div>}
-    </div>
   );
 }
 

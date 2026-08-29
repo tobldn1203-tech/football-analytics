@@ -2,6 +2,7 @@ import type { RankedPlayer } from "@/lib/analytics/scoring/types";
 import { QUALITY_BANDS } from "@/lib/analytics/scoring/types";
 import type { PositionCode } from "@/lib/competitions/premier-league";
 import type { PlayerAvailability } from "./types";
+import { describeAvailabilityDetail, formatAvailabilityContext } from "./describe";
 import { describeWorthKnowingVoice } from "@/lib/analytics/voice/insightVoice";
 import type { VoiceLine } from "@/lib/analytics/voice/types";
 
@@ -54,10 +55,53 @@ export interface WorthKnowingInsight {
   tier: WorthKnowingTier;
   /** Always factual, always present, never dependent on the voice line. */
   headline: string;
+  /**
+   * SIGNAL → CONTEXT (see docs/PLAYER_TEAM_INFORMATION_DENSITY_AUDIT.md
+   * Part 1): a compact second sentence naming up to the 2 most important
+   * affected players' actual reason/timeframe, e.g. "Hinshelwood is a
+   * doubt — thigh injury · 75% chance of playing next match." Null
+   * whenever none of the affected players have fresh, extractable detail
+   * — the graceful fallback to the headline alone.
+   */
+  context: string | null;
   /** Every player this insight is actually about — sorted by score, descending. */
   players: WorthKnowingPlayer[];
   /** Only ever populated for the strongest tier, and only sometimes even then — see insightVoice.ts. Never replaces `headline`. */
   voice: VoiceLine | null;
+}
+
+/** Named players a context sentence will ever mention — see docs Part 1: "prioritise the most important players rather than dumping the entire squad." */
+const MAX_NAMED_IN_CONTEXT = 2;
+
+function lowerFirst(s: string): string {
+  return s.length === 0 ? s : s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/** One player's compact clause for the context sentence — always built from `formatAvailabilityContext`, never a separate phrasing. */
+function contextClauseFor(name: string, availability: PlayerAvailability): string {
+  if (availability.category === "suspension" || availability.category === "transfer") {
+    return `${name} is ${lowerFirst(formatAvailabilityContext(availability))}`;
+  }
+  const lead = availability.state === "doubtful" ? "a doubt" : "out";
+  return `${name} is ${lead} — ${lowerFirst(formatAvailabilityContext(availability))}`;
+}
+
+/**
+ * SIGNAL → CONTEXT: builds the optional second sentence naming up to
+ * MAX_NAMED_IN_CONTEXT players' real reason/timeframe. Returns null when
+ * none of the group has any extractable detail — falling back to the
+ * headline alone is exactly the "no meaningful contextual information"
+ * behaviour the brief asked for, not a bug.
+ */
+function buildContextLine(subject: Array<{ player: RankedPlayer; availability: PlayerAvailability }>): string | null {
+  const withDetail = subject.filter((x) => {
+    const { reason, timeframe } = describeAvailabilityDetail(x.availability);
+    return reason !== null || timeframe !== null || x.availability.detail !== null;
+  });
+  if (withDetail.length === 0) return null;
+
+  const named = [...withDetail].sort((a, b) => (b.player.scores.overall ?? 0) - (a.player.scores.overall ?? 0)).slice(0, MAX_NAMED_IN_CONTEXT);
+  return named.map((x) => contextClauseFor(x.player.name, x.availability)).join("; ") + ".";
 }
 
 function countWord(n: number): string {
@@ -207,6 +251,7 @@ export function buildWorthKnowingInsight(
   return {
     tier,
     headline,
+    context: buildContextLine(subject),
     players: subject.map((x) => toWorthKnowingPlayer(x.player, x.availability)),
     voice,
   };

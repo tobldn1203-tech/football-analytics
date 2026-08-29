@@ -103,6 +103,9 @@ export function MyFootballWidget({
         <div className="border-t border-[var(--color-border)] px-5 py-3.5 sm:px-6">
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-[var(--color-ink-faint)]">Worth knowing</p>
           <p className="mt-1 text-[13px] leading-relaxed text-[var(--color-ink)]">{worthKnowing.headline}</p>
+          {worthKnowing.context && (
+            <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--color-ink-faint)]">{worthKnowing.context}</p>
+          )}
           {worthKnowing.voice && (
             <p className="mt-0.5 text-[11.5px] italic text-[var(--color-ink-faint)]">{worthKnowing.voice.observation}</p>
           )}

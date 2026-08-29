@@ -1,4 +1,5 @@
 import type { PlayerAvailability } from "@/lib/analytics/availability/types";
+import { formatAvailabilityContext } from "@/lib/analytics/availability/describe";
 
 /**
  * The player page's only availability UI — a single, compact line, never a
@@ -7,25 +8,14 @@ import type { PlayerAvailability } from "@/lib/analytics/availability/types";
  * "available" and "no information" case, not an oversight (an explicit
  * "Available" badge for every player was ruled out by design, see docs
  * §5 "Visibility rule").
+ *
+ * Text comes from `formatAvailabilityContext` — the same shared formatter
+ * Availability Watch uses (see docs/PLAYER_TEAM_INFORMATION_DENSITY_AUDIT.md
+ * Part 1) — so a player's own page and any club-level mention of them
+ * always describe their situation identically, never two divergent phrasings.
  */
 export function PlayerAvailabilityLine({ availability }: { availability: PlayerAvailability | null }) {
   if (!availability) return null;
-
-  const { label, detail, chanceOfPlayingNextRound, state } = availability;
-
-  // FPL's own note is already specific enough on its own for suspensions
-  // ("Suspended until 19 Sep") — repeating the word "Suspended" ahead of
-  // it would just be noise. For every other case the note doesn't restate
-  // the label, so both are shown together.
-  const detailRepeatsLabel = detail != null && detail.toLowerCase().startsWith(label.toLowerCase());
-
-  const text = detail
-    ? detailRepeatsLabel
-      ? detail
-      : `${label} — ${detail}`
-    : state === "doubtful" && chanceOfPlayingNextRound != null
-      ? `${label} — ${chanceOfPlayingNextRound}% chance of playing next match`
-      : label;
 
   return (
     <p className="relative mt-2.5 flex items-center gap-1.5 text-[12.5px] text-[var(--hero-ink-soft)]">
@@ -36,7 +26,7 @@ export function PlayerAvailabilityLine({ availability }: { availability: PlayerA
       />
       <span>
         <span className="font-medium text-[var(--hero-ink)]">Availability: </span>
-        {text}
+        {formatAvailabilityContext(availability)}
       </span>
     </p>
   );

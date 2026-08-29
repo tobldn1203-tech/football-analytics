@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { WorthKnowingInsight } from "@/lib/analytics/availability/worthKnowing";
+import { formatAvailabilityContext } from "@/lib/analytics/availability/describe";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
 import { NationalityFlag } from "@/components/identity/nationality-flag";
 import { POSITION_LABEL } from "@/lib/competitions/premier-league";
@@ -18,6 +19,13 @@ export function TeamWorthKnowing({ insight }: { insight: WorthKnowingInsight | n
     <section className="mt-9">
       <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">Availability watch</h2>
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-5 sm:px-6">
+        {/* Signal (headline) here, context per-player below in the rows
+            themselves (reason · timeframe) — deliberately not a second
+            prose sentence too: the rows already say the same thing more
+            scannably, and repeating it in both places would be exactly
+            the clutter this pass is meant to remove. My Football's more
+            compact surface uses the prose `context` field instead, since
+            it has no room for rows — see my-football-widget.tsx. */}
         <p className="text-[14.5px] leading-relaxed text-[var(--color-ink)]">{insight.headline}</p>
         {insight.voice && <p className="mt-1.5 text-[12.5px] italic text-[var(--color-ink-faint)]">{insight.voice.observation}</p>}
 
@@ -41,7 +49,7 @@ export function TeamWorthKnowing({ insight }: { insight: WorthKnowingInsight | n
                     style={{ backgroundColor: "var(--color-attention)" }}
                     aria-hidden="true"
                   />
-                  <span>{p.availability.label}</span>
+                  <span className="truncate">{formatAvailabilityContext(p.availability)}</span>
                 </div>
               </div>
               <div className="shrink-0 text-right">

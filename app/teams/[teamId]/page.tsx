@@ -10,7 +10,6 @@ import { TrendBadge } from "@/components/ui/trend-badge";
 import { SupportedClubButton } from "@/components/teams/supported-club-button";
 import { TeamOverview } from "@/components/teams/team-overview";
 import { TeamPerformanceProfile } from "@/components/teams/team-performance-profile";
-import { TeamStrengths } from "@/components/teams/team-strengths";
 import { TeamPlayersDriving } from "@/components/teams/team-players-driving";
 import { TeamMatchHistory } from "@/components/teams/team-match-history";
 import { LeagueTable } from "@/components/teams/league-table";
@@ -104,27 +103,25 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
       </div>
 
       {/* TEAM OVERVIEW — the interpretation, up front */}
-      <TeamOverview story={story} strengths={strengths} developmentAreas={developmentAreas} />
+      <TeamOverview story={story} />
 
       {/* AVAILABILITY WATCH — only rendered when genuinely noteworthy */}
       <TeamWorthKnowing insight={worthKnowing} />
 
-      {/* PERFORMANCE PROFILE — the same scores, presented as read-outs, not attribute cards */}
+      {/*
+        PERFORMANCE PROFILE — the single, canonical read-out of the four
+        category scores, now also carrying the "strongest area"/"area to
+        watch" framing directly on its rows (see
+        docs/PLAYER_TEAM_INFORMATION_DENSITY_AUDIT.md Part 3). This used
+        to be three separate cards describing the same numbers; it's one.
+      */}
       <section className="mt-9">
         <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">Performance profile</h2>
-        <TeamPerformanceProfile scores={seasonScores} />
+        <TeamPerformanceProfile scores={seasonScores} strengths={strengths} developmentAreas={developmentAreas} />
         <p className="mt-2.5 text-[11px] text-[var(--color-ink-faint)]">
           {qualityLabel} overall — based on {sample.matches} match{sample.matches === 1 ? "" : "es"} this season
           {sample.confidence === "low" ? " (small sample)" : ""}.
         </p>
-      </section>
-
-      {/* WHAT'S WORKING / AREAS TO WATCH — the fuller detail behind the Overview headline */}
-      <section className="mt-9">
-        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">
-          What&rsquo;s working, what isn&rsquo;t
-        </h2>
-        <TeamStrengths strengths={strengths} developmentAreas={developmentAreas} />
       </section>
 
       {/* PERFORMANCE JOURNEY / TRENDS */}

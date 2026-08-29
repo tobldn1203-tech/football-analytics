@@ -151,7 +151,7 @@ export default async function PlayerProfilePage({
                         ? "down"
                         : "steady"
                   }
-                  label={`${intel.form.label} form`}
+                  label={`${intel.form.label} form · ${intel.form.score.toFixed(1)}`}
                 />
                 {intel.consistency.available && (
                   <span className="text-[11.5px] text-[var(--hero-ink-faint)]">
@@ -186,8 +186,6 @@ export default async function PlayerProfilePage({
         <>
           <SeasonStory
             paragraph={story.paragraph}
-            ranking={ranking}
-            intel={intel}
             totals={totals}
             showCleanSheets={showCleanSheets}
             journeyPoints={journeyPoints}

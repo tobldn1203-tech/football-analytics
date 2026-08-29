@@ -19,9 +19,9 @@ function mkPlayer(id: string, name: string, overall: number, matches = 1): Ranke
   };
 }
 
-function mkAvailability(category: NewsCategory, state: "unavailable" | "doubtful" = "unavailable"): PlayerAvailability {
+function mkAvailability(category: NewsCategory, state: "unavailable" | "doubtful" = "unavailable", detail: string | null = null): PlayerAvailability {
   const label = { injury: "Injured", suspension: "Suspended", transfer: "No longer at the club", availability: "Doubtful", general: "Update" }[category];
-  return { state, category, label, detail: null, chanceOfPlayingNextRound: state === "doubtful" ? 75 : null, updatedAt: null, sourceName: "Fantasy Premier League" };
+  return { state, category, label, detail, chanceOfPlayingNextRound: state === "doubtful" ? 75 : null, updatedAt: null, sourceName: "Fantasy Premier League" };
 }
 
 const FORBIDDEN_PHRASES = ["because", "caused", "will miss", "ruled out for", "as a result of", "which explains"];
@@ -224,5 +224,80 @@ describe("buildWorthKnowingInsight", () => {
     expect(insight?.tier).toBe("top_performer_multiple");
     expect(insight?.voice).not.toBeNull();
     expect(insight?.voice?.evidence).toBeTruthy(); // always-present factual evidence alongside any humour
+  });
+
+  describe("context (Availability Watch 2.0 — SIGNAL → CONTEXT)", () => {
+    it("null when no affected player has any extractable detail — graceful fallback to the headline alone", () => {
+      const players = [mkPlayer("a", "A", 8.0, 5)];
+      const map = new Map([["a", mkAvailability("injury")]]); // no detail
+      const insight = buildWorthKnowingInsight("Hull City", players, map);
+      expect(insight?.context).toBeNull();
+    });
+
+    it("names a single doubtful player's reason and timeframe — real Brighton-shaped data", () => {
+      const players = [mkPlayer("a", "Georginio", 6.7, 5)];
+      const map = new Map([["a", mkAvailability("availability", "doubtful", "Unspecified injury - 75% chance of playing")]]);
+      const insight = buildWorthKnowingInsight("Brighton", players, map);
+      expect(insight?.context).toBe("Georginio is a doubt — unspecified injury · 75% chance of playing next match.");
+    });
+
+    it("names both players for a two-player tier, joined with '; ' — real Brighton-shaped data", () => {
+      const players = [mkPlayer("a", "Hinshelwood", 7.2, 5), mkPlayer("b", "Georginio", 6.7, 5)];
+      const map = new Map([
+        ["a", mkAvailability("availability", "doubtful", "Unspecified injury - 25% chance of playing")],
+        ["b", mkAvailability("availability", "doubtful", "Unspecified injury - 75% chance of playing")],
+      ]);
+      const insight = buildWorthKnowingInsight("Brighton", players, map);
+      expect(insight?.context).toBe(
+        "Hinshelwood is a doubt — unspecified injury · 25% chance of playing next match; Georginio is a doubt — unspecified injury · 75% chance of playing next match."
+      );
+    });
+
+    it("uses 'is out' phrasing for an unavailable (injury) player, with a genuine expected-return date shown verbatim", () => {
+      const players = [mkPlayer("a", "Osula", 7.3, 5)];
+      const map = new Map([["a", mkAvailability("injury", "unavailable", "Foot injury - Expected back 11 Oct")]]);
+      const insight = buildWorthKnowingInsight("Newcastle", players, map);
+      expect(insight?.context).toBe("Osula is out — foot injury · expected back 11 Oct.");
+    });
+
+    it("caps named players at 2 even when several are affected — 'prioritise the most important players'", () => {
+      const players = [mkPlayer("a", "A", 9.0, 5), mkPlayer("b", "B", 8.5, 5), mkPlayer("c", "C", 8.0, 5), mkPlayer("d", "D", 5.6, 5)];
+      const map = new Map([
+        ["a", mkAvailability("injury", "unavailable", "Knee injury - Unknown return date")],
+        ["b", mkAvailability("injury", "unavailable", "Ankle injury - Unknown return date")],
+        ["c", mkAvailability("injury", "unavailable", "Hip injury - Unknown return date")],
+        ["d", mkAvailability("injury", "unavailable", "Back injury - Unknown return date")],
+      ]);
+      const insight = buildWorthKnowingInsight("Hull City", players, map);
+      expect(insight?.context).toContain("A is out");
+      expect(insight?.context).toContain("B is out");
+      expect(insight?.context).not.toContain("C is out");
+      expect(insight?.context).not.toContain("D is out");
+      // All 4 remain in the full player list for Team Intelligence's rows — only the sentence is capped.
+      expect(insight?.players).toHaveLength(4);
+    });
+
+    it("never invents a return date, severity, or certainty beyond what FPL's text says", () => {
+      const players = [mkPlayer("a", "A", 8.0, 5)];
+      const map = new Map([["a", mkAvailability("injury", "unavailable", "Hamstring injury - Unknown return date")]]);
+      const insight = buildWorthKnowingInsight("Hull City", players, map);
+      expect(insight?.context).toBe("A is out — hamstring injury · return date unknown.");
+      expect(insight?.context).not.toMatch(/weeks|months|severe|serious|long[- ]term/i);
+    });
+
+    it("suspension context reads as a natural clause, not a redundant double label", () => {
+      const players = [mkPlayer("a", "Gomes", 8.0, 5)];
+      const map = new Map([["a", mkAvailability("suspension", "unavailable", "Suspended until 19 Sep")]]);
+      const insight = buildWorthKnowingInsight("Aston Villa", players, map);
+      expect(insight?.context).toBe("Gomes is suspended until 19 Sep.");
+    });
+
+    it("is deterministic — identical input produces an identical context sentence", () => {
+      const players = [mkPlayer("a", "A", 8.0, 5)];
+      const map = new Map([["a", mkAvailability("injury", "unavailable", "Groin injury - Unknown return date")]]);
+      expect(buildWorthKnowingInsight("Hull City", players, map)?.context).toBe(
+        buildWorthKnowingInsight("Hull City", players, map)?.context
+      );
+    });
   });
 });
