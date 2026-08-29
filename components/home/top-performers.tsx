@@ -126,21 +126,36 @@ function CategoryTabs({
             }}
             role="tab"
             aria-selected={isActive}
+            aria-label={c.label}
             onClick={() => c.available && onChange(c.key)}
             disabled={!c.available}
-            title={!c.available ? c.unavailableReason : undefined}
+            title={!c.available ? c.unavailableReason : c.label}
             className={clsx(
-              "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-t-md px-3 py-2.5 text-[13.5px] font-medium transition-colors",
+              // MOBILE FIX: seven tabs at full icon+label width only ever
+              // showed 2-3 before requiring a scroll a user had no strong
+              // reason to attempt — see docs/MOBILE_EXPERIENCE_AUDIT.md.
+              // Icon-only below `sm` fits every category on screen at
+              // once (verified: all 7 visible with no scrolling needed at
+              // realistic phone widths); the full icon+label version
+              // returns unchanged at `sm` and up.
+              "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-t-md px-2.5 py-2 text-[13.5px] font-medium transition-colors sm:px-3 sm:py-2.5",
               isActive ? "text-[var(--hero-ink)]" : "text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink-soft)]",
               !c.available && "cursor-not-allowed opacity-50"
             )}
           >
-            <Icon size={14} strokeWidth={2} aria-hidden="true" />
-            {c.label}
+            <Icon size={16} strokeWidth={2} aria-hidden="true" className="sm:hidden" />
+            <Icon size={14} strokeWidth={2} aria-hidden="true" className="hidden sm:block" />
+            <span className="hidden sm:inline">{c.label}</span>
             {!c.available && (
-              <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide">
-                Soon
-              </span>
+              <>
+                <span
+                  className="h-1 w-1 shrink-0 rounded-full bg-current sm:hidden"
+                  aria-hidden="true"
+                />
+                <span className="hidden rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:inline">
+                  Soon
+                </span>
+              </>
             )}
           </button>
         );
