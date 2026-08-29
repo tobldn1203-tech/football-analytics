@@ -23,24 +23,33 @@ export async function SiteHeader() {
           </Link>
           <CompetitionSeasonSwitcher seasonLabel={season?.label ?? null} />
         </div>
-        <div className="flex items-center gap-3 sm:gap-5">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-5">
           {/* overflow-x-auto is scoped to just the link list — an absolutely
               positioned dropdown (MyFootballNav) living inside an overflow
               container gets clipped to it, so that widget sits outside this
-              scroll region entirely rather than sharing it. */}
-          <nav className="flex items-center gap-3 overflow-x-auto sm:gap-7">
+              scroll region entirely rather than sharing it.
+
+              MOBILE FIX (docs/MOBILE_EXPERIENCE_AUDIT.md finding #1): this
+              cluster measured 405px wide against a 390px viewport, forcing
+              the whole page to scroll horizontally. Two changes below claw
+              back that width without touching any of the four real,
+              functional links: the disabled "Rankings" placeholder (not a
+              working destination yet) is hidden below `sm`, and each link
+              gets a slightly larger tap area on mobile (vertical padding,
+              not extra width) rather than a smaller one. */}
+          <nav className="flex min-w-0 items-center gap-2 overflow-x-auto sm:gap-7">
             {NAV_ITEMS.map((item) => (
-              <span key={item.label} className="relative shrink-0">
+              <span key={item.label} className={`relative shrink-0 ${item.active ? "" : "hidden sm:inline"}`}>
                 {item.active ? (
                   <Link
                     href={item.href}
-                    className="text-[13.5px] font-medium text-[var(--color-ink)] sm:text-[14px]"
+                    className="inline-block py-2 text-[13.5px] font-medium text-[var(--color-ink)] sm:py-0 sm:text-[14px]"
                   >
                     {item.label}
                   </Link>
                 ) : (
                   <span
-                    className="cursor-default text-[13.5px] font-medium text-[var(--color-ink-faint)] sm:text-[14px]"
+                    className="inline-block py-2 text-[13.5px] font-medium text-[var(--color-ink-faint)] sm:py-0 sm:text-[14px]"
                     title="Coming soon"
                   >
                     {item.label}
@@ -49,7 +58,7 @@ export async function SiteHeader() {
               </span>
             ))}
           </nav>
-          <span className="shrink-0 border-l border-[var(--color-border)] pl-3 sm:pl-5">
+          <span className="shrink-0 border-l border-[var(--color-border)] pl-2 sm:pl-5">
             <MyFootballNav />
           </span>
         </div>

@@ -22,7 +22,7 @@ export function FixtureCard({ fixture }: { fixture: FixtureCardData }) {
 
   return (
     <div className="flex items-center gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 transition-all hover:-translate-y-px hover:border-[var(--color-border-strong)] hover:shadow-sm sm:px-5">
-      <Link href={`/teams/${fixture.homeTeam.id}`} className="flex flex-1 items-center justify-end gap-2.5 text-right hover:opacity-80">
+      <Link href={`/teams/${fixture.homeTeam.id}`} className="flex min-w-0 flex-1 items-center justify-end gap-2.5 text-right hover:opacity-80">
         <span className="truncate text-[13.5px] font-medium text-[var(--color-ink)]">
           {fixture.homeTeam.name}
         </span>
@@ -44,7 +44,7 @@ export function FixtureCard({ fixture }: { fixture: FixtureCardData }) {
         </div>
       </Link>
 
-      <Link href={`/teams/${fixture.awayTeam.id}`} className="flex flex-1 items-center gap-2.5 hover:opacity-80">
+      <Link href={`/teams/${fixture.awayTeam.id}`} className="flex min-w-0 flex-1 items-center gap-2.5 hover:opacity-80">
         <TeamCrest crestUrl={fixture.awayTeam.crestUrl} shortName={fixture.awayTeam.shortName} size="lg" />
         <span className="truncate text-[13.5px] font-medium text-[var(--color-ink)]">
           {fixture.awayTeam.name}

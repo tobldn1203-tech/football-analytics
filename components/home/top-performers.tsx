@@ -64,7 +64,7 @@ export function TopPerformers({
         <CategoryTabs active={active} onChange={setActive} />
       </div>
 
-      <div className="rounded-b-xl border border-t-0 border-[var(--color-border)] bg-[var(--color-surface)] px-5 pt-4 sm:px-8">
+      <div className="rounded-b-xl border border-t-0 border-[var(--color-border)] bg-[var(--color-surface)] px-3 pt-4 sm:px-8">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
           <p className="text-[13.5px] text-[var(--color-ink-soft)]">{definition.description}</p>
           <p className="text-[12px] text-[var(--color-ink-faint)]">
@@ -105,6 +105,16 @@ function CategoryTabs({
       aria-label="Performance category"
       className="relative mt-5 flex gap-1 overflow-x-auto py-1"
     >
+      {/*
+        MOBILE FIX (docs/MOBILE_EXPERIENCE_AUDIT.md, "no visual affordance
+        for horizontally-scrollable regions"): a soft edge fade hinting
+        there's more to scroll to. Purely decorative (pointer-events-none),
+        shown on narrow widths where this row is most likely to overflow.
+      */}
+      <div
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--hero-bg)] to-transparent sm:hidden"
+        aria-hidden="true"
+      />
       {CATEGORY_DEFINITIONS.map((c) => {
         const Icon = CATEGORY_ICON[c.key];
         const isActive = active === c.key;
@@ -160,11 +170,11 @@ function PerformanceTable({
       <table className="w-full border-collapse text-[14px]">
         <thead>
           <tr className="border-b border-[var(--color-border)] text-left text-[11.5px] uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">
-            <th className="w-8 py-2.5 pr-3 font-medium">#</th>
-            <th className="px-3 py-2.5 font-medium">Player</th>
+            <th className="w-8 py-2.5 pr-2 font-medium sm:pr-3">#</th>
+            <th className="px-2 py-2.5 font-medium sm:px-3">Player</th>
             <th className="hidden px-3 py-2.5 font-medium sm:table-cell">Team</th>
             <th className="hidden px-3 py-2.5 font-medium md:table-cell">Position</th>
-            <th className="px-3 py-2.5 text-right font-medium">Performance</th>
+            <th className="px-2 py-2.5 text-right font-medium sm:px-3">Performance</th>
             <th className="hidden px-3 py-2.5 text-right font-medium sm:table-cell">Form</th>
           </tr>
         </thead>
@@ -185,33 +195,45 @@ function PerformanceTable({
                   )}
                   style={{ ["--row-accent" as string]: getTeamColor(p.teamShortName) }}
                 >
-                  <td className="border-l-[3px] border-transparent py-2.5 pr-3 pl-2 tabular text-[var(--color-ink-faint)] transition-colors group-hover:[border-left-color:var(--row-accent)]">
+                  <td className="border-l-[3px] border-transparent py-2.5 pr-2 pl-2 tabular text-[var(--color-ink-faint)] transition-colors group-hover:[border-left-color:var(--row-accent)] sm:pr-3">
                     {i + 1}
                   </td>
-                  <td className="px-3 py-2.5">
-                    <span className="inline-flex items-center gap-2.5">
-                      <span className="inline-flex shrink-0 transition-transform duration-200 group-hover:scale-[1.08]">
-                        <PlayerAvatar
-                          photoUrl={p.photoUrl}
-                          name={p.name}
-                          teamShortName={p.teamShortName}
-                          size="md"
-                        />
-                      </span>
-                      <span className="flex flex-col">
-                        <Link
-                          href={`/players/${p.slug}`}
-                          className="flex items-center gap-1.5 font-medium text-[var(--color-ink)] hover:text-[var(--color-accent)]"
-                        >
-                          <NationalityFlag code={p.nationalityCode} country={p.nationality} size="xs" />
-                          {p.name}
-                        </Link>
-                        <span className="text-[12px] text-[var(--color-ink-faint)] sm:hidden">
-                          {p.teamShortName} · {POSITION_LABEL[p.position]}
+                  <td className="px-2 py-2.5 sm:px-3">
+                    <span className="inline-flex min-w-0 items-center gap-2.5">
+                      {/*
+                        MOBILE FIX (docs/MOBILE_EXPERIENCE_AUDIT.md finding
+                        #3): avatar and name used to look like one unit but
+                        only the name text was actually a link — tapping
+                        the photo did nothing. One Link now covers both,
+                        with the name truncating (rather than the table
+                        growing past the viewport) so a long name can never
+                        push the Performance column off-screen — see
+                        finding #2. No nested <a>: this replaces the old
+                        avatar span + separate Link, it doesn't wrap one
+                        inside the other.
+                      */}
+                      <Link href={`/players/${p.slug}`} className="group/player inline-flex min-w-0 items-center gap-2.5">
+                        <span className="inline-flex shrink-0 transition-transform duration-200 group-hover/player:scale-[1.08]">
+                          <PlayerAvatar
+                            photoUrl={p.photoUrl}
+                            name={p.name}
+                            teamShortName={p.teamShortName}
+                            size="md"
+                          />
                         </span>
-                      </span>
+                        <span className="flex min-w-0 flex-col">
+                          <span className="flex min-w-0 items-center gap-1.5 font-medium text-[var(--color-ink)] group-hover/player:text-[var(--color-accent)]">
+                            <NationalityFlag code={p.nationalityCode} country={p.nationality} size="xs" />
+                            <span className="max-w-[92px] truncate sm:max-w-none">{p.name}</span>
+                          </span>
+                          <span className="text-[12px] text-[var(--color-ink-faint)] sm:hidden">
+                            {p.teamShortName} · {POSITION_LABEL[p.position]}
+                          </span>
+                        </span>
+                      </Link>
                       {p.sample.confidence !== "established" && (
                         <span
+                          className="shrink-0"
                           style={{
                             color: `var(--color-${confidenceTone(p.sample.confidence)})`,
                           }}
@@ -235,10 +257,10 @@ function PerformanceTable({
                   <td className="hidden px-3 py-2.5 text-[var(--color-ink-soft)] md:table-cell">
                     {POSITION_LABEL[p.position]}
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className="px-2 py-2.5 text-right sm:px-3">
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : p.playerId)}
-                      className="group/score inline-flex flex-col items-end rounded-sm focus-visible:outline-offset-4"
+                      className="group/score inline-flex flex-col items-end rounded-sm py-1 focus-visible:outline-offset-4"
                       aria-expanded={isExpanded}
                     >
                       <span className="font-display tabular text-[18px] font-semibold leading-none text-[var(--color-ink)]">

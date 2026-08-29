@@ -29,16 +29,27 @@ export function MyFootballNav() {
 
   return (
     <div className="relative shrink-0" ref={ref}>
+      {/*
+        MOBILE FIX (docs/MOBILE_EXPERIENCE_AUDIT.md finding #1): the "My
+        Football" label text was a meaningful share of the header
+        overflow. Icon/crest only below `sm` — still discoverable (once a
+        club is set, it's THAT club's own crest, arguably more
+        recognisable than the generic label) and still opens the exact
+        same picker/dropdown; the full label returns at `sm` and up where
+        there's room for it.
+      */}
       <button
         onClick={() => (club ? setOpen((v) => !v) : setPicking(true))}
-        className="flex shrink-0 items-center gap-1.5 text-[13.5px] font-medium text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] sm:text-[14px]"
+        aria-label="My Football"
+        title="My Football"
+        className="flex shrink-0 items-center gap-1.5 py-2 text-[13.5px] font-medium text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] sm:py-0 sm:text-[14px]"
       >
         {club ? (
           <TeamCrest crestUrl={club.crestUrl} shortName={club.shortName} size="sm" />
         ) : (
           <span aria-hidden="true">⚽</span>
         )}
-        My Football
+        <span className="hidden sm:inline">My Football</span>
       </button>
 
       {open && club && (
