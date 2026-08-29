@@ -38,6 +38,7 @@ export interface MatchRatingInput {
   playerId: string;
   slug: string;
   name: string;
+  teamId: string;
   teamShortName: string;
   position: PositionCode;
   photoUrl: string | null;
@@ -72,6 +73,7 @@ export function computeMatchRatings(rows: MatchRatingInput[]): MatchRating[] {
       id: r.playerId,
       slug: r.slug,
       name: r.name,
+      teamId: r.teamId,
       teamShortName: r.teamShortName,
       position: r.position,
       photoUrl: r.photoUrl,

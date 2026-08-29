@@ -98,37 +98,48 @@ export function SeasonStory({
           <SectionLabel>Best Performances</SectionLabel>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {best.map((m) => (
-              <Link
+              // Two sibling links, not one nested inside the other: the
+              // team crest is its own route to that club's Team
+              // Intelligence page, the rest of the row goes to the match.
+              <div
                 key={m.matchId}
-                href={`/match/${m.matchId}`}
                 className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] px-4 py-3 transition-colors hover:border-[var(--color-info)] hover:bg-[var(--color-surface-2)]"
               >
-                <TeamIdentity crestUrl={m.opponentCrestUrl} name={m.opponentShortName} shortName={m.opponentShortName} size="md" showFullName={false} />
-                <div className="min-w-0 flex-1">
-                  <div className="text-[13.5px] font-medium text-[var(--color-ink)]">
-                    vs {m.opponentShortName} ({m.isHome ? "H" : "A"})
-                  </div>
-                  <div className="mt-0.5 text-[12.5px] text-[var(--color-ink-faint)]">
-                    {[
-                      m.goals > 0 && `${m.goals} goal${m.goals > 1 ? "s" : ""}`,
-                      m.assists > 0 && `${m.assists} assist${m.assists > 1 ? "s" : ""}`,
-                      m.cleanSheet && "clean sheet",
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || `${m.minutes} minutes played`}
-                  </div>
-                </div>
-                {m.matchRating && (
-                  <div className="shrink-0 text-right">
-                    <div className="font-display text-[17px] font-semibold tabular text-[var(--color-info)]">
-                      {m.matchRating.score.toFixed(1)}
+                <TeamIdentity
+                  crestUrl={m.opponentCrestUrl}
+                  name={m.opponentShortName}
+                  shortName={m.opponentShortName}
+                  teamId={m.opponentTeamId}
+                  size="md"
+                  showFullName={false}
+                />
+                <Link href={`/match/${m.matchId}`} className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13.5px] font-medium text-[var(--color-ink)]">
+                      vs {m.opponentShortName} ({m.isHome ? "H" : "A"})
                     </div>
-                    <div className="text-[10px] uppercase tracking-[0.04em] text-[var(--color-ink-faint)]">
-                      {m.matchRating.label}
+                    <div className="mt-0.5 text-[12.5px] text-[var(--color-ink-faint)]">
+                      {[
+                        m.goals > 0 && `${m.goals} goal${m.goals > 1 ? "s" : ""}`,
+                        m.assists > 0 && `${m.assists} assist${m.assists > 1 ? "s" : ""}`,
+                        m.cleanSheet && "clean sheet",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || `${m.minutes} minutes played`}
                     </div>
                   </div>
-                )}
-              </Link>
+                  {m.matchRating && (
+                    <div className="shrink-0 text-right">
+                      <div className="font-display text-[17px] font-semibold tabular text-[var(--color-info)]">
+                        {m.matchRating.score.toFixed(1)}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-[0.04em] text-[var(--color-ink-faint)]">
+                        {m.matchRating.label}
+                      </div>
+                    </div>
+                  )}
+                </Link>
+              </div>
             ))}
           </div>
         </div>

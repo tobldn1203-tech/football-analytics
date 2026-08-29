@@ -2,50 +2,95 @@ import Link from "next/link";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
 import { NationalityFlag } from "@/components/identity/nationality-flag";
 import { POSITION_LABEL } from "@/lib/competitions/premier-league";
-import type { RankedPlayer, Category } from "@/lib/analytics/scoring/types";
+import { classifyArchetype } from "@/lib/analytics/archetypes/archetypes";
+import type { RankedPlayer } from "@/lib/analytics/scoring/types";
 
-const SLOTS: Array<{ key: "standout" | "inForm" | "attackingThreat" | "creativeLeader" | "defensiveStandout"; icon: string; label: string; metric: Category }> = [
-  { key: "standout", icon: "⭐", label: "Standout performer", metric: "overall" },
-  { key: "inForm", icon: "🔥", label: "Most in form", metric: "form" },
-  { key: "attackingThreat", icon: "⚡", label: "Biggest attacking threat", metric: "attack" },
-  { key: "creativeLeader", icon: "🎨", label: "Creative leader", metric: "creation" },
-  { key: "defensiveStandout", icon: "🧱", label: "Defensive standout", metric: "defence" },
+/**
+ * PLAYERS DRIVING THE TEAM
+ * ==========================================================================
+ * See docs/TEAM_NAVIGATION_AND_PLAYER_DRIVERS_REFINEMENT.md. A compact,
+ * scannable list — not a grid of FIFA-style attribute cards. No new
+ * analytics: every "why" phrase below names one of the same five
+ * existing category picks this component always used (standout/in-form/
+ * attack/creation/defence), just as plain football language instead of a
+ * dashboard label. The one addition is the player's existing Archetype
+ * (lib/analytics/archetypes) shown as a light, secondary line — already
+ * computed elsewhere in the app, not a new score.
+ *
+ * A player who qualifies for more than one slot (e.g. the team's standout
+ * performer is ALSO its biggest attacking threat) gets ONE row combining
+ * both reasons, not two separate, duplicate-looking rows — a presentation
+ * choice, not a new dedup "algorithm".
+ */
+
+type SlotKey = "standout" | "inForm" | "attackingThreat" | "creativeLeader" | "defensiveStandout";
+
+const SLOTS: Array<{ key: SlotKey; why: string }> = [
+  { key: "standout", why: "Standout performer this season" },
+  { key: "inForm", why: "In red-hot form" },
+  { key: "attackingThreat", why: "Leading the attack" },
+  { key: "creativeLeader", why: "Creating the chances" },
+  { key: "defensiveStandout", why: "Anchoring the defence" },
 ];
 
 export function TeamPlayersDriving({
   players,
 }: {
-  players: Partial<Record<(typeof SLOTS)[number]["key"], RankedPlayer | null>>;
+  players: Partial<Record<SlotKey, RankedPlayer | null>>;
 }) {
-  const filled = SLOTS.filter((s) => players[s.key]);
-  if (filled.length === 0) {
+  // Group by player: someone filling multiple slots gets one row with
+  // every reason they qualify, in the SLOTS list's own priority order —
+  // never a repeated avatar/name for the same person.
+  const rows: Array<{ player: RankedPlayer; whys: string[] }> = [];
+  const rowByPlayerId = new Map<string, (typeof rows)[number]>();
+  for (const slot of SLOTS) {
+    const player = players[slot.key];
+    if (!player) continue;
+    let row = rowByPlayerId.get(player.playerId);
+    if (!row) {
+      row = { player, whys: [] };
+      rowByPlayerId.set(player.playerId, row);
+      rows.push(row);
+    }
+    row.whys.push(slot.why);
+  }
+
+  if (rows.length === 0) {
     return <p className="text-[13.5px] text-[var(--color-ink-faint)]">Not enough matches yet to single anyone out — too early to call.</p>;
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {filled.map((s) => {
-        const player = players[s.key]!;
-        const score = player.scores[s.metric] ?? 0;
+    <div className="divide-y divide-[var(--color-border)] rounded-xl border border-[var(--color-border)]">
+      {rows.map(({ player, whys }) => {
+        const archetype = classifyArchetype(player);
         return (
           <Link
-            key={s.key}
+            key={player.playerId}
             href={`/players/${player.slug}`}
-            className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] px-4 py-3.5 transition-colors hover:bg-[var(--color-surface-2)]"
+            className="group flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-[var(--color-surface-2)]"
           >
             <PlayerAvatar photoUrl={player.photoUrl} name={player.name} teamShortName={player.teamShortName} size="md" />
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.04em] text-[var(--color-ink-faint)]">
-                <span aria-hidden="true">{s.icon}</span>
-                {s.label}
-              </div>
-              <div className="flex items-center gap-1.5 truncate text-[14px] font-medium text-[var(--color-ink)]">
+              <div className="flex items-center gap-1.5 truncate text-[14.5px] font-medium text-[var(--color-ink)] group-hover:text-[var(--color-accent)]">
                 <NationalityFlag code={player.nationalityCode} country={player.nationality} size="xs" />
                 <span className="truncate">{player.name}</span>
               </div>
-              <div className="text-[11.5px] text-[var(--color-ink-faint)]">{POSITION_LABEL[player.position]}</div>
+              <div className="mt-0.5 truncate text-[12px] text-[var(--color-ink-faint)]">
+                {POSITION_LABEL[player.position]} · {whys.join(" · ")}
+              </div>
+              {archetype.key && (
+                <div className="mt-0.5 truncate text-[11.5px] text-[var(--color-ink-faint)]">
+                  {archetype.label}
+                  {archetype.qualifier && ` · ${archetype.qualifier}`}
+                </div>
+              )}
             </div>
-            <div className="shrink-0 font-display text-[17px] font-semibold tabular text-[var(--color-accent)]">{score.toFixed(1)}</div>
+            <div className="shrink-0 text-right">
+              <div className="font-display text-[18px] font-semibold tabular text-[var(--color-ink)]">
+                {(player.scores.overall ?? 0).toFixed(1)}
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.04em] text-[var(--color-ink-faint)]">Performance</div>
+            </div>
           </Link>
         );
       })}

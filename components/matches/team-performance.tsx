@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { TeamCrest } from "@/components/identity/team-crest";
 import { getTeamColor } from "@/lib/competitions/teamBranding";
 import type { TeamPerformanceSummary } from "@/lib/analytics/scoring/matchRepository";
@@ -21,8 +22,8 @@ export function TeamPerformance({
 }: {
   home: TeamPerformanceSummary;
   away: TeamPerformanceSummary;
-  homeTeam: { shortName: string; crestUrl: string | null };
-  awayTeam: { shortName: string; crestUrl: string | null };
+  homeTeam: { id: string; shortName: string; crestUrl: string | null };
+  awayTeam: { id: string; shortName: string; crestUrl: string | null };
 }) {
   if (home.rating === null && away.rating === null) return null;
 
@@ -56,7 +57,7 @@ function TeamRatingBlock({
   align,
   accent,
 }: {
-  team: { shortName: string; crestUrl: string | null };
+  team: { id: string; shortName: string; crestUrl: string | null };
   rating: number | null;
   align: "left" | "right";
   accent: string;
@@ -71,7 +72,12 @@ function TeamRatingBlock({
   );
   return (
     <div className={`flex flex-col gap-1 ${align === "right" ? "items-end" : "items-start"}`}>
-      <div className={`flex items-center gap-2 ${align === "right" ? "flex-row-reverse" : ""}`}>{content}</div>
+      <Link
+        href={`/teams/${team.id}`}
+        className={`flex items-center gap-2 hover:opacity-80 ${align === "right" ? "flex-row-reverse" : ""}`}
+      >
+        {content}
+      </Link>
       <span className="font-display text-[28px] font-semibold leading-none tabular text-[var(--color-info)]">
         {rating !== null ? rating.toFixed(1) : "—"}
       </span>

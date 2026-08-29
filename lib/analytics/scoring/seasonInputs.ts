@@ -61,6 +61,7 @@ export async function getCurrentSeasonPerformanceInputs(): Promise<
       id: player.id,
       slug: player.slug,
       name: player.displayName,
+      teamId: player.teamId,
       teamShortName: player.team.shortName,
       position: player.position as PositionCode,
       photoUrl: getPlayerPhotoUrl(player.photoCode),

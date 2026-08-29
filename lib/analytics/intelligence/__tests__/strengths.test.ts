@@ -10,6 +10,7 @@ function makePlayer(
     playerId: "1",
     slug: "player",
     name: "Player",
+    teamId: "team-tma",
     teamShortName: "TMA",
     position: "MID",
     sample: { matches: 10, minutes: 900, confidence },

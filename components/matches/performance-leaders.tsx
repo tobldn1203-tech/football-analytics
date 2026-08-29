@@ -26,17 +26,17 @@ export function PerformanceLeaders({
   team,
 }: {
   leaders: PerformanceLeadersData;
-  team: { shortName: string; crestUrl: string | null };
+  team: { id: string; shortName: string; crestUrl: string | null };
 }) {
   const rows = ROWS.filter((r) => leaders[r.key] !== null);
   if (rows.length === 0) return null;
 
   return (
     <div className="border-l-2 pl-3.5" style={{ borderColor: getTeamColor(team.shortName) }}>
-      <div className="mb-3 flex items-center gap-2">
+      <Link href={`/teams/${team.id}`} className="mb-3 flex items-center gap-2 hover:opacity-80">
         <TeamCrest crestUrl={team.crestUrl} shortName={team.shortName} size="sm" />
         <span className="text-[13.5px] font-semibold text-[var(--color-ink)]">{team.shortName}</span>
-      </div>
+      </Link>
       <div className="space-y-2.5">
         {rows.map(({ key, icon, label }) => (
           <LeaderRow key={key} icon={icon} label={label} leader={leaders[key]!} />

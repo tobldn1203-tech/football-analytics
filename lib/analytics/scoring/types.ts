@@ -53,6 +53,8 @@ export interface RankedPlayer {
   playerId: string;
   slug: string;
   name: string;
+  /** Pass-through identity — the player's club, for navigation to its Team Intelligence page. Not analytics. */
+  teamId: string;
   teamShortName: string;
   position: PositionCode;
   sample: SampleSize;

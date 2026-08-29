@@ -30,6 +30,7 @@ export interface PlayerMatchRow {
   matchId: string;
   gameweek: number | null;
   kickoff: string;
+  opponentTeamId: string;
   opponentShortName: string;
   opponentCrestUrl: string | null;
   isHome: boolean;
@@ -52,6 +53,7 @@ export interface PlayerProfileData {
     id: string;
     slug: string;
     name: string;
+    teamId: string;
     teamShortName: string;
     teamName: string;
     position: PositionCode;
@@ -93,6 +95,7 @@ export async function getPlayerProfile(slug: string): Promise<PlayerProfileData 
       matchId: p.matchId,
       gameweek: p.match.gameweek,
       kickoff: p.match.kickoff.toISOString(),
+      opponentTeamId: isHome ? p.match.awayTeamId : p.match.homeTeamId,
       opponentShortName: opponent.shortName,
       opponentCrestUrl: getTeamCrestUrl(opponent.crestCode),
       isHome,
@@ -122,6 +125,7 @@ export async function getPlayerProfile(slug: string): Promise<PlayerProfileData 
       id: player.id,
       slug: player.slug,
       name: player.displayName,
+      teamId: player.teamId,
       teamShortName: player.team.shortName,
       teamName: player.team.name,
       position: player.position as PositionCode,

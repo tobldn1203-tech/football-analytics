@@ -8,6 +8,7 @@ function makePlayer(overrides: Partial<RankedPlayer> = {}): RankedPlayer {
     playerId: "1",
     slug: "lewis-hall",
     name: "Lewis Hall",
+    teamId: "team-new",
     teamShortName: "NEW",
     position: "DEF",
     sample: { matches: 10, minutes: 900, confidence: "established" },

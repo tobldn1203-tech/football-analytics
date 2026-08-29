@@ -69,6 +69,8 @@ export interface PlayerPerformanceInput {
   id: string;
   slug: string;
   name: string;
+  /** Pass-through identity — see RankedPlayer.teamId. Not analytics. */
+  teamId: string;
   teamShortName: string;
   position: PositionCode;
   /** Pass-through identity imagery — see lib/assets/images.ts. Not analytics. */
@@ -295,6 +297,7 @@ export function computeProvisionalRankings(
       playerId: p.id,
       slug: p.slug,
       name: p.name,
+      teamId: p.teamId,
       teamShortName: p.teamShortName,
       photoUrl: p.photoUrl,
       teamCrestUrl: p.teamCrestUrl,

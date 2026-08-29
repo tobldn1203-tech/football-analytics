@@ -76,12 +76,15 @@ export default async function MatchCentrePage({
         </p>
 
         <div className="relative mt-3 flex items-center justify-center gap-4 sm:gap-8">
-          <div className="flex flex-1 flex-col items-center gap-2 text-center">
+          <Link
+            href={`/teams/${homeTeam.id}`}
+            className="flex flex-1 flex-col items-center gap-2 text-center transition-opacity hover:opacity-80"
+          >
             <TeamCrest crestUrl={homeTeam.crestUrl} shortName={homeTeam.shortName} size="lg" />
             <span className="font-display text-[15px] font-semibold text-[var(--hero-ink)] sm:text-[17px]">
               {homeTeam.name}
             </span>
-          </div>
+          </Link>
 
           <div className="flex shrink-0 flex-col items-center px-2">
             {played ? (
@@ -98,12 +101,15 @@ export default async function MatchCentrePage({
             </div>
           </div>
 
-          <div className="flex flex-1 flex-col items-center gap-2 text-center">
+          <Link
+            href={`/teams/${awayTeam.id}`}
+            className="flex flex-1 flex-col items-center gap-2 text-center transition-opacity hover:opacity-80"
+          >
             <TeamCrest crestUrl={awayTeam.crestUrl} shortName={awayTeam.shortName} size="lg" />
             <span className="font-display text-[15px] font-semibold text-[var(--hero-ink)] sm:text-[17px]">
               {awayTeam.name}
             </span>
-          </div>
+          </Link>
         </div>
 
         <p className="relative mt-5 text-center text-[12.5px] text-[var(--hero-ink-faint)]">
@@ -131,6 +137,7 @@ export default async function MatchCentrePage({
             <section className="mt-8">
               <MatchStandout
                 standout={standout}
+                teamId={standout.teamSide === "home" ? homeTeam.id : awayTeam.id}
                 teamShortName={standout.teamSide === "home" ? homeTeam.shortName : awayTeam.shortName}
                 teamCrestUrl={standout.teamSide === "home" ? homeTeam.crestUrl : awayTeam.crestUrl}
               />
@@ -176,10 +183,10 @@ export default async function MatchCentrePage({
             </h2>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
               <div>
-                <div className="mb-3 flex items-center gap-2">
+                <Link href={`/teams/${homeTeam.id}`} className="mb-3 flex items-center gap-2 hover:opacity-80">
                   <TeamCrest crestUrl={homeTeam.crestUrl} shortName={homeTeam.shortName} size="md" />
                   <span className="text-[14px] font-semibold text-[var(--color-ink)]">{homeTeam.name}</span>
-                </div>
+                </Link>
                 <SquadList
                   startingXI={homeSquad.startingXI}
                   substitutes={homeSquad.substitutes}
@@ -187,10 +194,10 @@ export default async function MatchCentrePage({
                 />
               </div>
               <div>
-                <div className="mb-3 flex items-center gap-2">
+                <Link href={`/teams/${awayTeam.id}`} className="mb-3 flex items-center gap-2 hover:opacity-80">
                   <TeamCrest crestUrl={awayTeam.crestUrl} shortName={awayTeam.shortName} size="md" />
                   <span className="text-[14px] font-semibold text-[var(--color-ink)]">{awayTeam.name}</span>
-                </div>
+                </Link>
                 <SquadList
                   startingXI={awaySquad.startingXI}
                   substitutes={awaySquad.substitutes}

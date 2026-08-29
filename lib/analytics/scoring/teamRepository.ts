@@ -150,6 +150,7 @@ export interface TeamMatchHistoryEntry {
   matchId: string;
   gameweek: number | null;
   kickoff: string;
+  opponentTeamId: string;
   opponentShortName: string;
   opponentCrestUrl: string | null;
   isHome: boolean;
@@ -184,7 +185,7 @@ export interface TeamProfileData {
   /** Every one of the club's players who has cleared the ranking engine's minutes floor — the full list `players` above picks its 5 highlights from. Exposed so a caller can cross-reference against other per-player data (e.g. availability) without a second ranking computation. */
   teamPlayers: RankedPlayer[];
   matchHistory: TeamMatchHistoryEntry[];
-  nextFixture: { matchId: string; opponentShortName: string; opponentCrestUrl: string | null; isHome: boolean; kickoff: string } | null;
+  nextFixture: { matchId: string; opponentTeamId: string; opponentShortName: string; opponentCrestUrl: string | null; isHome: boolean; kickoff: string } | null;
 }
 
 const STRENGTH_MIN = 5.5;
@@ -231,6 +232,7 @@ export async function getTeamProfile(teamId: string): Promise<TeamProfileData | 
     playerId: team.id,
     slug: team.id,
     name: team.name,
+    teamId: team.id,
     teamShortName: team.shortName,
     position: "MID",
     sample: { matches: matchesPlayed, minutes: totalMinutes, confidence },
@@ -274,6 +276,7 @@ export async function getTeamProfile(teamId: string): Promise<TeamProfileData | 
         matchId: m.id,
         gameweek: m.gameweek,
         kickoff: m.kickoff.toISOString(),
+        opponentTeamId: opponent.id,
         opponentShortName: opponent.shortName,
         opponentCrestUrl: getTeamCrestUrl(opponent.crestCode),
         isHome,
@@ -290,6 +293,7 @@ export async function getTeamProfile(teamId: string): Promise<TeamProfileData | 
   const nextFixture = next
     ? {
         matchId: next.id,
+        opponentTeamId: (next.homeTeamId === teamId ? next.awayTeam : next.homeTeam).id,
         opponentShortName: (next.homeTeamId === teamId ? next.awayTeam : next.homeTeam).shortName,
         opponentCrestUrl: getTeamCrestUrl((next.homeTeamId === teamId ? next.awayTeam : next.homeTeam).crestCode),
         isHome: next.homeTeamId === teamId,

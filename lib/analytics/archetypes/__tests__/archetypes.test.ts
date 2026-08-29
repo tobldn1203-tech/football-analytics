@@ -11,6 +11,7 @@ function makePlayer(
     playerId: "1",
     slug: "player",
     name: "Player",
+    teamId: "team-tma",
     teamShortName: "TMA",
     position,
     sample: { matches: confidence === "low" ? 1 : confidence === "moderate" ? 4 : 10, minutes: 900, confidence },

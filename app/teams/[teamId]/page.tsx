@@ -9,7 +9,6 @@ import { MatchTrend } from "@/components/charts/match-trend";
 import { TrendBadge } from "@/components/ui/trend-badge";
 import { SupportedClubButton } from "@/components/teams/supported-club-button";
 import { TeamOverview } from "@/components/teams/team-overview";
-import { TeamPerformanceProfile } from "@/components/teams/team-performance-profile";
 import { TeamPlayersDriving } from "@/components/teams/team-players-driving";
 import { TeamMatchHistory } from "@/components/teams/team-match-history";
 import { LeagueTable } from "@/components/teams/league-table";
@@ -21,7 +20,7 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
   const [data, standings] = await Promise.all([getTeamProfile(teamId), getLeagueStandings()]);
   if (!data) notFound();
 
-  const { team, totalTeams, standing, seasonScores, sample, qualityLabel, strengths, developmentAreas, momentum, story, players, teamPlayers, matchHistory, nextFixture } = data;
+  const { team, totalTeams, standing, strengths, developmentAreas, momentum, story, players, teamPlayers, matchHistory, nextFixture } = data;
 
   // "Worth knowing" — availability cross-referenced against each player's
   // own already-computed Performance score. See
@@ -102,27 +101,23 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
         )}
       </div>
 
-      {/* TEAM OVERVIEW — the interpretation, up front */}
-      <TeamOverview story={story} />
-
-      {/* AVAILABILITY WATCH — only rendered when genuinely noteworthy */}
-      <TeamWorthKnowing insight={worthKnowing} />
+      {/* TEAM OVERVIEW — the interpretation, up front, including the one "what's working/what isn't" line the story prose doesn't cover */}
+      <TeamOverview story={story} strengths={strengths} developmentAreas={developmentAreas} />
 
       {/*
-        PERFORMANCE PROFILE — the single, canonical read-out of the four
-        category scores, now also carrying the "strongest area"/"area to
-        watch" framing directly on its rows (see
-        docs/PLAYER_TEAM_INFORMATION_DENSITY_AUDIT.md Part 3). This used
-        to be three separate cards describing the same numbers; it's one.
+        PLAYERS DRIVING THE TEAM — promoted well above the fold. See
+        docs/TEAM_NAVIGATION_AND_PLAYER_DRIVERS_REFINEMENT.md: the players
+        driving a team are more interesting to a fan than a dashboard of
+        five abstract scores, so they now come right after the Overview
+        rather than after a since-removed Performance Profile section.
       */}
       <section className="mt-9">
-        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">Performance profile</h2>
-        <TeamPerformanceProfile scores={seasonScores} strengths={strengths} developmentAreas={developmentAreas} />
-        <p className="mt-2.5 text-[11px] text-[var(--color-ink-faint)]">
-          {qualityLabel} overall — based on {sample.matches} match{sample.matches === 1 ? "" : "es"} this season
-          {sample.confidence === "low" ? " (small sample)" : ""}.
-        </p>
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">Players driving the team</h2>
+        <TeamPlayersDriving players={players} />
       </section>
+
+      {/* AVAILABILITY WATCH — "what should I know right now"; only rendered when genuinely noteworthy */}
+      <TeamWorthKnowing insight={worthKnowing} />
 
       {/* PERFORMANCE JOURNEY / TRENDS */}
       <section className="mt-9">
@@ -139,12 +134,6 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
         <p className="mt-2 text-[12px] text-[var(--color-ink-faint)]">
           {momentum.available ? momentum.explanation : "Too early to call a trend — check back after a few more matches."}
         </p>
-      </section>
-
-      {/* PLAYERS DRIVING THE TEAM */}
-      <section className="mt-10">
-        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">Players driving the team</h2>
-        <TeamPlayersDriving players={players} />
       </section>
 
       {/* MATCH HISTORY */}
@@ -169,10 +158,12 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
       {/* NEXT FIXTURE */}
       {nextFixture && (
         <section className="mt-10 flex items-center gap-3 rounded-xl bg-[var(--color-surface-2)] px-5 py-4">
-          <TeamCrest crestUrl={nextFixture.opponentCrestUrl} shortName={nextFixture.opponentShortName} size="md" />
-          <div className="flex-1 text-[13.5px] text-[var(--color-ink)]">
-            Next: {nextFixture.isHome ? "vs" : "@"} <span className="font-medium">{nextFixture.opponentShortName}</span>
-          </div>
+          <Link href={`/teams/${nextFixture.opponentTeamId}`} className="flex flex-1 items-center gap-3 hover:opacity-80">
+            <TeamCrest crestUrl={nextFixture.opponentCrestUrl} shortName={nextFixture.opponentShortName} size="md" />
+            <div className="text-[13.5px] text-[var(--color-ink)]">
+              Next: {nextFixture.isHome ? "vs" : "@"} <span className="font-medium">{nextFixture.opponentShortName}</span>
+            </div>
+          </Link>
           <Link href={`/match/${nextFixture.matchId}`} className="shrink-0 text-[12.5px] font-medium text-[var(--color-accent)] hover:underline">
             View match →
           </Link>

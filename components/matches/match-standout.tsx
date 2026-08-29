@@ -13,10 +13,12 @@ import type { MatchStandout as MatchStandoutData } from "@/lib/analytics/scoring
  */
 export function MatchStandout({
   standout,
+  teamId,
   teamShortName,
   teamCrestUrl,
 }: {
   standout: MatchStandoutData;
+  teamId: string;
   teamShortName: string;
   teamCrestUrl: string | null;
 }) {
@@ -37,10 +39,13 @@ export function MatchStandout({
             <NationalityFlag code={standout.nationalityCode} country={standout.nationality} size="sm" />
             <span className="truncate">{standout.name}</span>
           </Link>
-          <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[var(--color-ink-faint)]">
+          <Link
+            href={`/teams/${teamId}`}
+            className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[var(--color-ink-faint)] hover:text-[var(--color-ink)]"
+          >
             <TeamCrest crestUrl={teamCrestUrl} shortName={teamShortName} size="sm" />
             {teamShortName}
-          </div>
+          </Link>
         </div>
         <div className="flex w-[78px] shrink-0 flex-col items-end text-right sm:w-[92px]">
           <span className="font-display text-[30px] font-semibold leading-none tabular text-[var(--color-info)] sm:text-[38px]">

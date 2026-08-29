@@ -9,6 +9,7 @@ function mkPlayer(id: string, name: string, overall: number, matches = 1): Ranke
     playerId: id,
     slug: id,
     name,
+    teamId: "team-hul",
     teamShortName: "HUL",
     position: "MID",
     sample: { matches, minutes: matches * 90, confidence: classifySampleConfidence(matches) },

@@ -17,6 +17,7 @@ import { getCurrentSeasonPerformanceInputs } from "./seasonInputs";
  */
 
 interface TeamIdentitySlim {
+  id: string;
   name: string;
   shortName: string;
   crestUrl: string | null;
@@ -98,11 +99,13 @@ export async function getGameweekFixtures(gameweek: number): Promise<FixtureCard
     kickoff: m.kickoff.toISOString(),
     status: m.status,
     homeTeam: {
+      id: m.homeTeamId,
       name: m.homeTeam.name,
       shortName: m.homeTeam.shortName,
       crestUrl: getTeamCrestUrl(m.homeTeam.crestCode),
     },
     awayTeam: {
+      id: m.awayTeamId,
       name: m.awayTeam.name,
       shortName: m.awayTeam.shortName,
       crestUrl: getTeamCrestUrl(m.awayTeam.crestCode),
@@ -141,8 +144,8 @@ export async function getAllClubFixtureSnapshots(): Promise<Record<string, ClubF
     gameweek: m.gameweek,
     kickoff: m.kickoff.toISOString(),
     status: m.status,
-    homeTeam: { name: m.homeTeam.name, shortName: m.homeTeam.shortName, crestUrl: getTeamCrestUrl(m.homeTeam.crestCode) },
-    awayTeam: { name: m.awayTeam.name, shortName: m.awayTeam.shortName, crestUrl: getTeamCrestUrl(m.awayTeam.crestCode) },
+    homeTeam: { id: m.homeTeamId, name: m.homeTeam.name, shortName: m.homeTeam.shortName, crestUrl: getTeamCrestUrl(m.homeTeam.crestCode) },
+    awayTeam: { id: m.awayTeamId, name: m.awayTeam.name, shortName: m.awayTeam.shortName, crestUrl: getTeamCrestUrl(m.awayTeam.crestCode) },
     homeScore: m.homeScore,
     awayScore: m.awayScore,
   });
@@ -398,6 +401,7 @@ export async function getGameweekRatings(
     playerId: p.playerId,
     slug: p.player.slug,
     name: p.player.displayName,
+    teamId: p.player.teamId,
     teamShortName: p.player.team.shortName,
     position: p.player.position as PositionCode,
     photoUrl: getPlayerPhotoUrl(p.player.photoCode),
@@ -566,11 +570,13 @@ export async function getMatchCentre(matchId: string): Promise<MatchCentreData |
       awayScore: match.awayScore,
     },
     homeTeam: {
+      id: match.homeTeamId,
       name: match.homeTeam.name,
       shortName: match.homeTeam.shortName,
       crestUrl: getTeamCrestUrl(match.homeTeam.crestCode),
     },
     awayTeam: {
+      id: match.awayTeamId,
       name: match.awayTeam.name,
       shortName: match.awayTeam.shortName,
       crestUrl: getTeamCrestUrl(match.awayTeam.crestCode),

@@ -227,6 +227,7 @@ function PerformanceTable({
                       crestUrl={p.teamCrestUrl}
                       name={p.teamShortName}
                       shortName={p.teamShortName}
+                      teamId={p.teamId}
                       size="sm"
                       showFullName={false}
                     />

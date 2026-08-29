@@ -119,6 +119,7 @@ export default async function PlayerProfilePage({
                   crestUrl={player.teamCrestUrl}
                   name={player.teamName}
                   shortName={player.teamShortName}
+                  teamId={player.teamId}
                   size="sm"
                 />
                 <span>·</span>
