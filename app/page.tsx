@@ -6,6 +6,7 @@ import { buildWorthKnowingInsight, type WorthKnowingInsight } from "@/lib/analyt
 import { TopPerformers } from "@/components/home/top-performers";
 import { DiscoverTeaser } from "@/components/home/discover-teaser";
 import { MyFootballWidget } from "@/components/home/my-football-widget";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import type { RankedPlayer } from "@/lib/analytics/scoring/types";
 
 export const revalidate = 300;
@@ -105,15 +106,26 @@ export default async function Home() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
-      <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--color-ink-faint)]">
-        <span className="font-medium uppercase tracking-[0.1em]">Preview build</span>
-        <span aria-hidden="true">·</span>
-        <span>
-          Provisional scoring —{" "}
-          <a href="/methodology" className="underline underline-offset-2 hover:text-[var(--color-ink)]">
-            how these scores are calculated
-          </a>
-        </span>
+      {/* UX REWORK: was a full-width, always-expanded line sitting above
+          everything else on the page — accurate, but disproportionately
+          prominent for a footnote. Same two claims, same link, same
+          meaning — "Preview build" (the product's current stage) and
+          "Provisional scoring" (the methodology caveat) are still both
+          here verbatim, just closed by default via the same native
+          <details> disclosure already used for Match Centre's squad lists
+          (components/ui/collapsible-section.tsx). A reader who doesn't
+          care skips a single small label; a reader who does care gets the
+          full explanation and working link one click away, not a
+          navigation away. */}
+      <div className="mb-6">
+        <CollapsibleSection label="Preview build" className="inline-block">
+          <p className="pb-1 text-[12px] text-[var(--color-ink-faint)]">
+            Provisional scoring —{" "}
+            <a href="/methodology" className="underline underline-offset-2 hover:text-[var(--color-ink)]">
+              how these scores are calculated
+            </a>
+          </p>
+        </CollapsibleSection>
       </div>
 
       <MyFootballWidget

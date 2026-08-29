@@ -9,17 +9,33 @@ import { qualityLabelFor } from "@/lib/analytics/scoring/types";
 import type { WorthKnowingInsight } from "@/lib/analytics/availability/worthKnowing";
 import { TeamCrest } from "@/components/identity/team-crest";
 import { PlayerAvatar } from "@/components/identity/player-avatar";
-import { NationalityFlag } from "@/components/identity/nationality-flag";
 import { getTeamColor } from "@/lib/competitions/teamBranding";
+
+const RESULT_COLOR = {
+  W: "var(--color-positive)",
+  D: "var(--color-ink-faint)",
+  L: "var(--color-negative)",
+} as const;
 
 /**
  * The personalised layer on top of the existing homepage (Personalisation
  * Foundation) — renders nothing at all when no club is selected, so the
- * default experience is untouched. Once a club is picked, this enhances
- * the top of the page with real, already-computed data: the club's next
- * fixture, most recent result, and standout player (highest existing
- * Performance score on the squad) — no new analytics, no team-rating
- * formula, just existing facts surfaced club-first.
+ * default experience is untouched. Once a club is picked, this surfaces
+ * real, already-computed data: the club identity, the one piece of
+ * intelligence worth knowing about it right now, and quick jumps into its
+ * next fixture / latest result / standout player — no new analytics, no
+ * team-rating formula, just existing facts surfaced club-first.
+ *
+ * UX REWORK (see docs — My Football module rework): this used to be a
+ * bordered, dashboard-like card with its own header link, a divided
+ * 3-column stat grid, a separate "worth knowing" block and a separate
+ * bottom CTA link — four visually competing pieces stacked in one box.
+ * It's now one editorial callout modelled directly on DiscoverTeaser (the
+ * component that already sits right below it on this page): a single link
+ * for the whole club identity + intelligence, left-accented in the club's
+ * colour, ending in an inline "Explore Team Intelligence →" — plus a
+ * compact secondary row of small sibling links for the facts that used to
+ * fill a whole grid. Same data in, same destinations, far less chrome.
  */
 export function MyFootballWidget({
   fixtures,
@@ -45,120 +61,123 @@ export function MyFootballWidget({
   const insight = insightByTeam[club.shortName];
   const worthKnowing = worthKnowingByTeam[club.shortName];
   const accent = getTeamColor(club.shortName);
+  const teamHref = `/teams/${club.id}`;
 
-  const ctaHref = snapshot?.next ? `/match/${snapshot.next.matchId}` : snapshot?.last ? `/match/${snapshot.last.matchId}` : "/matches";
-  const ctaLabel = snapshot?.next ? "View next match" : snapshot?.last ? "View last match" : "View fixtures";
+  // The richer, availability-aware insight wins when it exists — showing
+  // both it and the generic category-leader line (the old layout's
+  // separate header line + "Worth knowing" block) said the same kind of
+  // thing twice. Nothing here is deleted: `insight` is still the fallback
+  // whenever `worthKnowing` isn't present for this club.
+  const primaryLine = worthKnowing?.headline ?? insight ?? null;
+  const secondaryLine = worthKnowing ? worthKnowing.context : null;
+  const voiceLine = worthKnowing?.voice?.observation ?? null;
+
+  const lastResult = fixtureResult(snapshot?.last ?? null, club.shortName);
 
   return (
-    <div
-      className="mb-8 overflow-hidden rounded-xl border border-[var(--color-border)]"
-      style={{ borderTopColor: accent, borderTopWidth: 3 }}
-    >
-      <Link href={`/teams/${club.id}`} className="flex flex-wrap items-center gap-4 bg-[var(--color-surface-2)] px-5 py-4 hover:bg-[var(--color-border)] sm:px-6">
+    <div className="mb-8">
+      {/* CLUB IDENTITY + INTELLIGENCE — one link, one destination. Crest and
+          name anchor "this is my club"; the intelligence line is the reason
+          the module exists, not an afterthought; the trailing label makes
+          Team Intelligence the obvious next step — never a second,
+          competing link inside the same block. */}
+      <Link
+        href={teamHref}
+        className="group flex items-start gap-3.5 rounded-xl border border-[var(--color-border)] px-5 py-4 transition-colors hover:bg-[var(--color-surface-2)] sm:items-center sm:gap-4 sm:px-6"
+        style={{ borderLeftColor: accent, borderLeftWidth: 3 }}
+      >
         <TeamCrest crestUrl={club.crestUrl} shortName={club.shortName} size="lg" />
         <div className="min-w-0 flex-1">
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-[var(--color-ink-faint)]">
-            My Football
+            My club
           </p>
-          <p className="font-display text-[19px] font-semibold tracking-tight text-[var(--color-ink)]">
+          <p className="font-display truncate text-[18px] font-semibold tracking-tight text-[var(--color-ink)] sm:text-[19px]">
             {club.name}
           </p>
-          {insight && <p className="mt-0.5 text-[12px] text-[var(--color-ink-faint)]">{insight}</p>}
+          {primaryLine && (
+            <p className="mt-1 text-[12.5px] leading-snug text-[var(--color-ink-soft)]">{primaryLine}</p>
+          )}
+          {secondaryLine && (
+            <p className="mt-0.5 text-[11.5px] leading-snug text-[var(--color-ink-faint)]">{secondaryLine}</p>
+          )}
+          {voiceLine && (
+            <p className="mt-0.5 text-[11px] italic leading-snug text-[var(--color-ink-faint)]">{voiceLine}</p>
+          )}
         </div>
-        <span className="shrink-0 text-[12px] font-medium text-[var(--color-accent)]">Team Intelligence →</span>
+        <span className="hidden shrink-0 items-center gap-1 self-center text-[12.5px] font-medium text-[var(--color-ink-soft)] transition-colors group-hover:text-[var(--color-accent)] sm:flex">
+          Explore Team Intelligence
+          <ChevronRight />
+        </span>
+        <ChevronRight className="mt-1 shrink-0 self-start text-[var(--color-ink-faint)] transition-colors group-hover:text-[var(--color-accent)] sm:hidden" />
       </Link>
 
-      <div className="grid grid-cols-1 divide-y divide-[var(--color-border)] px-5 py-4 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-6">
-        <FixtureBlock label="Next match" fixture={snapshot?.next ?? null} clubShortName={club.shortName} />
-        <FixtureBlock label="Latest result" fixture={snapshot?.last ?? null} clubShortName={club.shortName} showResult />
-        {standout ? (
-          <div className="py-3 sm:pl-6">
-            <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-[var(--color-ink-faint)]">
-              Standout player
-            </p>
-            <Link href={`/players/${standout.slug}`} className="flex items-center gap-2.5 hover:opacity-80">
-              <PlayerAvatar photoUrl={standout.photoUrl} name={standout.name} teamShortName={standout.teamShortName} size="md" />
-              <span>
-                <span className="flex items-center gap-1.5 text-[13.5px] font-medium text-[var(--color-ink)]">
-                  <NationalityFlag code={standout.nationalityCode} country={standout.nationality} size="xs" />
-                  {standout.name}
-                </span>
-                <span className="block text-[11.5px] text-[var(--color-ink-faint)]">
-                  {(standout.scores.overall ?? 0).toFixed(1)} · {qualityLabelFor(standout.scores.overall ?? 0)}
-                </span>
+      {/* QUICK FACTS — visually secondary, small sibling links (never
+          nested inside the link above). Replaces the old bordered 3-column
+          grid and the separate bottom "View next match →" CTA: the fixture
+          chip below already points at whichever of next/last is the more
+          useful destination, the same priority the old CTA used. */}
+      {(snapshot?.next || snapshot?.last || standout) && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 px-1 text-[12px] text-[var(--color-ink-faint)] sm:px-2">
+          {snapshot?.next && (
+            <Link href={`/match/${snapshot.next.matchId}`} className="flex items-center gap-1.5 hover:text-[var(--color-ink)]">
+              <span className="uppercase tracking-[0.04em]">Next</span>
+              <TeamCrest crestUrl={opponentOf(snapshot.next, club.shortName).crestUrl} shortName={opponentOf(snapshot.next, club.shortName).shortName} size="sm" />
+              <span className="text-[var(--color-ink-soft)]">vs {opponentOf(snapshot.next, club.shortName).shortName}</span>
+            </Link>
+          )}
+          {snapshot?.last && lastResult && (
+            <Link href={`/match/${snapshot.last.matchId}`} className="flex items-center gap-1.5 hover:text-[var(--color-ink)]">
+              <span className="uppercase tracking-[0.04em]">Last</span>
+              <span
+                className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-[var(--color-canvas)]"
+                style={{ backgroundColor: RESULT_COLOR[lastResult.letter] }}
+                aria-label={lastResult.letter === "W" ? "Won" : lastResult.letter === "L" ? "Lost" : "Drew"}
+              >
+                {lastResult.letter}
+              </span>
+              <span className="tabular text-[var(--color-ink-soft)]">
+                {lastResult.teamScore}–{lastResult.oppScore}
+              </span>
+              <TeamCrest crestUrl={lastResult.opponent.crestUrl} shortName={lastResult.opponent.shortName} size="sm" />
+              <span className="text-[var(--color-ink-soft)]">{lastResult.opponent.shortName}</span>
+            </Link>
+          )}
+          {standout && (
+            <Link href={`/players/${standout.slug}`} className="flex items-center gap-1.5 hover:text-[var(--color-ink)]">
+              <span className="uppercase tracking-[0.04em]">Standout</span>
+              <PlayerAvatar photoUrl={standout.photoUrl} name={standout.name} teamShortName={standout.teamShortName} size="sm" />
+              <span className="text-[var(--color-ink-soft)]">
+                {standout.name} · {(standout.scores.overall ?? 0).toFixed(1)} · {qualityLabelFor(standout.scores.overall ?? 0)}
               </span>
             </Link>
-          </div>
-        ) : (
-          <div className="py-3 sm:pl-6">
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-[var(--color-ink-faint)]">
-              Standout player
-            </p>
-            <p className="mt-1.5 text-[12.5px] text-[var(--color-ink-faint)]">Not enough data yet.</p>
-          </div>
-        )}
-      </div>
-
-      {worthKnowing && (
-        <div className="border-t border-[var(--color-border)] px-5 py-3.5 sm:px-6">
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-[var(--color-ink-faint)]">Worth knowing</p>
-          <p className="mt-1 text-[13px] leading-relaxed text-[var(--color-ink)]">{worthKnowing.headline}</p>
-          {worthKnowing.context && (
-            <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--color-ink-faint)]">{worthKnowing.context}</p>
-          )}
-          {worthKnowing.voice && (
-            <p className="mt-0.5 text-[11.5px] italic text-[var(--color-ink-faint)]">{worthKnowing.voice.observation}</p>
           )}
         </div>
       )}
-
-      <Link
-        href={ctaHref}
-        className="block border-t border-[var(--color-border)] px-5 py-2.5 text-[12.5px] font-medium text-[var(--color-accent)] hover:underline sm:px-6"
-      >
-        {ctaLabel} →
-      </Link>
     </div>
   );
 }
 
-function FixtureBlock({
-  label,
-  fixture,
-  clubShortName,
-  showResult,
-}: {
-  label: string;
-  fixture: { homeTeam: { shortName: string; crestUrl: string | null }; awayTeam: { shortName: string; crestUrl: string | null }; homeScore: number | null; awayScore: number | null; kickoff: string } | null;
-  clubShortName: string;
-  showResult?: boolean;
-}) {
+function ChevronRight({ className }: { className?: string }) {
   return (
-    <div className="py-3 first:pt-0 sm:py-0 sm:pr-6 sm:first:pl-0">
-      <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-[var(--color-ink-faint)]">{label}</p>
-      {!fixture ? (
-        <p className="text-[12.5px] text-[var(--color-ink-faint)]">
-          {showResult ? "No result yet this season." : "Nothing scheduled yet."}
-        </p>
-      ) : (
-        <div className="flex items-center gap-2 text-[13.5px] text-[var(--color-ink)]">
-          <TeamCrest crestUrl={fixture.homeTeam.crestUrl} shortName={fixture.homeTeam.shortName} size="sm" />
-          <span className={fixture.homeTeam.shortName === clubShortName ? "font-semibold" : ""}>
-            {fixture.homeTeam.shortName}
-          </span>
-          {showResult && fixture.homeScore !== null ? (
-            <span className="tabular font-semibold">
-              {fixture.homeScore}–{fixture.awayScore}
-            </span>
-          ) : (
-            <span className="text-[var(--color-ink-faint)]">vs</span>
-          )}
-          <span className={fixture.awayTeam.shortName === clubShortName ? "font-semibold" : ""}>
-            {fixture.awayTeam.shortName}
-          </span>
-          <TeamCrest crestUrl={fixture.awayTeam.crestUrl} shortName={fixture.awayTeam.shortName} size="sm" />
-        </div>
-      )}
-    </div>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+      <path d="m9 18 6-6-6-6" />
+    </svg>
   );
+}
+
+function opponentOf(fixture: { homeTeam: { shortName: string; crestUrl: string | null }; awayTeam: { shortName: string; crestUrl: string | null } }, clubShortName: string) {
+  return fixture.homeTeam.shortName === clubShortName ? fixture.awayTeam : fixture.homeTeam;
+}
+
+function fixtureResult(
+  fixture: { homeTeam: { shortName: string; crestUrl: string | null }; awayTeam: { shortName: string; crestUrl: string | null }; homeScore: number | null; awayScore: number | null } | null,
+  clubShortName: string,
+): { letter: "W" | "D" | "L"; teamScore: number; oppScore: number; opponent: { shortName: string; crestUrl: string | null } } | null {
+  if (!fixture || fixture.homeScore === null || fixture.awayScore === null) return null;
+  const isHome = fixture.homeTeam.shortName === clubShortName;
+  const teamScore = isHome ? fixture.homeScore : fixture.awayScore;
+  const oppScore = isHome ? fixture.awayScore : fixture.homeScore;
+  const opponent = isHome ? fixture.awayTeam : fixture.homeTeam;
+  const letter = teamScore > oppScore ? "W" : teamScore < oppScore ? "L" : "D";
+  return { letter, teamScore, oppScore, opponent };
 }
