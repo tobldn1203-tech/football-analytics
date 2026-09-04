@@ -69,7 +69,20 @@ export function HeaderNav() {
 
   return (
     <>
-      <nav className="flex min-w-0 items-center gap-2 overflow-x-auto sm:gap-7">
+      {/*
+        MOBILE NAV SIMPLIFICATION (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §12
+        follow-up — nav redundancy pass): this row was fully duplicated by
+        BottomNav's own Players/Discover/Matches/Teams tabs — confirmed by
+        direct measurement, not assumed: the mobile header rendered this
+        entire "Players Discover Matches Teams" row identically to the
+        bottom bar underneath it, on every page, contributing to a 132px
+        header (vs. 79px on desktop, which has no bottom nav to duplicate).
+        `hidden sm:flex` removes it below `sm`, where the bottom nav is the
+        one place these four destinations now live; `sm:flex` returns it
+        completely unchanged at `sm` and up, where there's no bottom nav
+        and this remains the only way to reach these sections.
+      */}
+      <nav className="hidden min-w-0 items-center gap-2 overflow-x-auto sm:flex sm:gap-7">
         {NAV_ITEMS.map((item) => {
           const isActive = item.active && isSectionActive(item.label, pathname, myFootballHref);
           return (
@@ -109,7 +122,20 @@ export function HeaderNav() {
           );
         })}
       </nav>
-      <span className="shrink-0 border-l border-[var(--color-border)] pl-2 sm:pl-5">
+      {/*
+        MyFootballNav itself is DELIBERATELY still rendered below `sm`,
+        unlike the four links above — it isn't a pure duplicate of
+        BottomNav's own My Football tab. That tab is a one-tap shortcut to
+        the supported club's page (or opens the picker if none is set);
+        this popover is the ONLY place "Change club" / "Remove" (see
+        my-football-nav.tsx) exist anywhere in the app. Hiding this too
+        would silently remove the one way to change or clear a supported
+        club on mobile, with no equivalent left — see the implementation
+        report for this pass. The divider is now `sm:border-l` only: with
+        the nav above it hidden, an always-on left border here would have
+        been a stray line with nothing to its left at mobile widths.
+      */}
+      <span className="shrink-0 pl-2 sm:border-l sm:border-[var(--color-border)] sm:pl-5">
         <MyFootballNav isActive={myFootballIsActive} />
       </span>
     </>

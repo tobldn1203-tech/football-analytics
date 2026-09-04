@@ -51,11 +51,13 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
           aria-hidden="true"
         />
         {/*
-          MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #5): same
-          -m-2/p-2 tap-target technique as this page's Player/Match Centre
-          siblings — visual position unchanged, real hit area grows.
+          MOBILE NAV SIMPLIFICATION (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §12
+          follow-up): "/teams" is the exact destination BottomNav's own
+          Teams tab is now, always, one tap away — a pure duplicate below
+          `sm`, same reasoning as the Player page's "← Top performers".
+          `sm:inline-block` keeps it exactly as before at `sm` and up.
         */}
-        <Link href="/teams" className="relative -m-2 p-2 text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]">
+        <Link href="/teams" className="relative -m-2 hidden p-2 text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)] sm:inline-block">
           ← Premier League table
         </Link>
 

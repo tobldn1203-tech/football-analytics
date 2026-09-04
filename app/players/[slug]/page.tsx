@@ -94,13 +94,18 @@ export default async function PlayerProfilePage({
           aria-hidden="true"
         />
         {/*
-          MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #5): -m-2/
-          p-2 grows the real tap target without moving the visible text —
-          same technique used on this page's Team/Match Centre siblings.
+          MOBILE NAV SIMPLIFICATION (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §12
+          follow-up): this went to "/" — the exact destination BottomNav's
+          own Players tab is now, always, one tap away. A plain link with
+          no extra state or context beyond "go back to the section" is a
+          pure duplicate once that tab exists, so it's hidden below `sm`.
+          `sm:inline-block` (still with the -m-2/p-2 tap-target fix from
+          the prior pass) keeps it exactly as before at `sm` and up, where
+          there's no bottom nav and this is still the only way back.
         */}
         <Link
           href="/"
-          className="relative -m-2 p-2 text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]"
+          className="relative -m-2 hidden p-2 text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)] sm:inline-block"
         >
           ← Top performers
         </Link>
