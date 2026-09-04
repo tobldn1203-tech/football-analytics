@@ -36,6 +36,32 @@ const RESULT_COLOR = {
  * colour, ending in an inline "Explore Team Intelligence →" — plus a
  * compact secondary row of small sibling links for the facts that used to
  * fill a whole grid. Same data in, same destinations, far less chrome.
+ *
+ * FOLLOW-UP TIGHTENING PASS (home page tightening — My Club consolidation):
+ * two further refinements on top of that rework, not a new redesign.
+ *
+ * (1) The generic category-leader sentence ("Strongest area this season:
+ * X.") is no longer rendered — `insightByTeam` is still accepted as a
+ * prop (app/page.tsx's computation and the call site are both untouched;
+ * this is a presentation change, not a data change) but no longer read in
+ * this component's body. `worthKnowing`'s own headline — the richer,
+ * availability-aware insight — was already preferred over it whenever
+ * both existed; the generic line only ever showed for clubs where
+ * `worthKnowing` was absent, and read as a noticeably blander, more
+ * template-y sentence than everything else on this card. For a club with
+ * no `worthKnowing` today, the card now leads with identity and lets the
+ * facts row below (2) carry "something worth knowing," rather than
+ * filling that space with the weakest signal available.
+ *
+ * (2) The "quick facts" row (next match / last result / standout player)
+ * used to be a second, unbordered block sitting below this card with a
+ * gap — same component, same file, but visually read as two stacked
+ * pieces rather than one. The border (and its left accent) now wraps
+ * BOTH the identity+intelligence link AND the facts row, with a thin
+ * border-top dividing them inside the same card — one bordered box, one
+ * primary link, the facts row's individual Links still siblings of it
+ * (never nested inside the `<a>`, exactly the constraint the original
+ * rework enforced — verified with zero nested anchors, same as before).
  */
 export function MyFootballWidget({
   fixtures,
@@ -45,7 +71,7 @@ export function MyFootballWidget({
 }: {
   fixtures: Record<string, ClubFixtureSnapshot>;
   standoutByTeam: Record<string, RankedPlayer>;
-  /** One cheap, already-computed line per team (e.g. its leading category this season) — see app/page.tsx. Never a new analysis, just a sentence over numbers already in memory there. */
+  /** One cheap, already-computed line per team (e.g. its leading category this season) — see app/page.tsx. Never a new analysis, just a sentence over numbers already in memory there. Accepted for backward compatibility with app/page.tsx's existing computation/prop-threading (untouched — this is a presentation change only) but no longer rendered here; see the tightening-pass note above. */
   insightByTeam?: Record<string, string>;
   /** Availability × performance insight per team, keyed the same way — see lib/analytics/availability/worthKnowing.ts. Only present for a club when there's genuinely something noteworthy; absent otherwise. */
   worthKnowingByTeam?: Record<string, WorthKnowingInsight>;
@@ -58,33 +84,38 @@ export function MyFootballWidget({
 
   const snapshot = fixtures[club.id];
   const standout = standoutByTeam[club.shortName];
-  const insight = insightByTeam[club.shortName];
   const worthKnowing = worthKnowingByTeam[club.shortName];
   const accent = getTeamColor(club.shortName);
   const teamHref = `/teams/${club.id}`;
 
-  // The richer, availability-aware insight wins when it exists — showing
-  // both it and the generic category-leader line (the old layout's
-  // separate header line + "Worth knowing" block) said the same kind of
-  // thing twice. Nothing here is deleted: `insight` is still the fallback
-  // whenever `worthKnowing` isn't present for this club.
-  const primaryLine = worthKnowing?.headline ?? insight ?? null;
+  // Only the richer, availability-aware insight is shown as the card's
+  // headline now — the generic category-leader sentence formerly used as
+  // its fallback ("Strongest area this season: X.") read as noticeably
+  // blander next to it, and is no longer displayed (see the tightening-
+  // pass note above). A club without a `worthKnowing` insight today shows
+  // no headline line at all; the facts row below still gives it real
+  // content rather than leaving the space empty.
+  const primaryLine = worthKnowing?.headline ?? null;
   const secondaryLine = worthKnowing ? worthKnowing.context : null;
   const voiceLine = worthKnowing?.voice?.observation ?? null;
 
   const lastResult = fixtureResult(snapshot?.last ?? null, club.shortName);
 
   return (
-    <div className="mb-8">
+    <div
+      className="mb-8 overflow-hidden rounded-xl border border-[var(--color-border)]"
+      style={{ borderLeftColor: accent, borderLeftWidth: 3 }}
+    >
       {/* CLUB IDENTITY + INTELLIGENCE — one link, one destination. Crest and
           name anchor "this is my club"; the intelligence line is the reason
           the module exists, not an afterthought; the trailing label makes
           Team Intelligence the obvious next step — never a second,
-          competing link inside the same block. */}
+          competing link inside the same block. The border/rounding/accent
+          now live on the OUTER div (see the tightening-pass note above),
+          not this Link, so the facts row below shares the same card. */}
       <Link
         href={teamHref}
-        className="group flex items-start gap-3.5 rounded-xl border border-[var(--color-border)] px-5 py-4 transition-colors hover:bg-[var(--color-surface-2)] sm:items-center sm:gap-4 sm:px-6"
-        style={{ borderLeftColor: accent, borderLeftWidth: 3 }}
+        className="group flex items-start gap-3.5 px-5 py-4 transition-colors hover:bg-[var(--color-surface-2)] sm:items-center sm:gap-4 sm:px-6"
       >
         <TeamCrest crestUrl={club.crestUrl} shortName={club.shortName} size="lg" />
         <div className="min-w-0 flex-1">
@@ -115,9 +146,12 @@ export function MyFootballWidget({
           nested inside the link above). Replaces the old bordered 3-column
           grid and the separate bottom "View next match →" CTA: the fixture
           chip below already points at whichever of next/last is the more
-          useful destination, the same priority the old CTA used. */}
+          useful destination, the same priority the old CTA used. Now
+          inside the same card as the identity link above (border-top
+          divider, matching horizontal padding) instead of a separate
+          unbordered block below it — one card, not two stacked pieces. */}
       {(snapshot?.next || snapshot?.last || standout) && (
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 px-1 text-[12px] text-[var(--color-ink-faint)] sm:px-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-[var(--color-border)] px-5 py-3 text-[12px] text-[var(--color-ink-faint)] sm:px-6">
           {snapshot?.next && (
             <Link href={`/match/${snapshot.next.matchId}`} className="flex items-center gap-1.5 hover:text-[var(--color-ink)]">
               <span className="uppercase tracking-[0.04em]">Next</span>

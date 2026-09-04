@@ -105,7 +105,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
+    <main className="mx-auto w-full max-w-5xl px-5 pt-6 pb-10 sm:px-8">
       {/* UX REWORK: was a full-width, always-expanded line sitting above
           everything else on the page — accurate, but disproportionately
           prominent for a footnote. Same two claims, same link, same
@@ -116,7 +116,15 @@ export default async function Home() {
           (components/ui/collapsible-section.tsx). A reader who doesn't
           care skips a single small label; a reader who does care gets the
           full explanation and working link one click away, not a
-          navigation away. */}
+          navigation away.
+
+          HOME PAGE TIGHTENING: the top of this page previously carried
+          `py-10` (40px) above this disclosure, on top of its own `mb-6`
+          (24px) gap to the next section below it — measured, a bigger gap
+          to the header above than the page uses between any of its own
+          stacked sections. `pt-6` (24px) brings it in line with that
+          established rhythm instead of inventing a new, smaller one;
+          `pb-10` at the bottom of the page is untouched. */}
       <div className="mb-6">
         <CollapsibleSection label="Preview build" className="inline-block">
           <p className="pb-1 text-[12px] text-[var(--color-ink-faint)]">
