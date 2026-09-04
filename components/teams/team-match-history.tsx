@@ -19,7 +19,19 @@ const RESULT_COLOR: Record<"W" | "D" | "L", string> = {
  * row row has two sibling click targets, opponent and match, rather than
  * one link containing another.
  */
-export function TeamMatchHistory({ matches, teamShortName }: { matches: TeamMatchHistoryEntry[]; teamShortName: string }) {
+export function TeamMatchHistory({
+  matches,
+  teamId,
+  teamShortName,
+}: {
+  matches: TeamMatchHistoryEntry[];
+  /** This team's own id — carried as `?from=` on each match link so Match
+   * Centre's breadcrumb can honestly say "← Back to [this team]" instead
+   * of always defaulting to the gameweek. See
+   * docs/MOBILE_FIRST_PRODUCT_AUDIT.md §5/§10 #6 and app/match/[matchId]/page.tsx. */
+  teamId: string;
+  teamShortName: string;
+}) {
   if (matches.length === 0) {
     return <p className="text-[13.5px] text-[var(--color-ink-faint)]">No matches played yet.</p>;
   }
@@ -45,7 +57,7 @@ export function TeamMatchHistory({ matches, teamShortName }: { matches: TeamMatc
             </span>
           </Link>
 
-          <Link href={`/match/${m.matchId}`} className="flex min-w-0 flex-1 items-center justify-end gap-3">
+          <Link href={`/match/${m.matchId}?from=${teamId}`} className="flex min-w-0 flex-1 items-center justify-end gap-3">
             <span className="shrink-0 tabular text-[13px] text-[var(--color-ink-soft)]">
               {m.teamScore}–{m.opponentScore}
             </span>

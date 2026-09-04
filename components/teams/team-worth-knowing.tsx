@@ -49,7 +49,16 @@ export function TeamWorthKnowing({ insight }: { insight: WorthKnowingInsight | n
                     style={{ backgroundColor: "var(--color-attention)" }}
                     aria-hidden="true"
                   />
-                  <span className="truncate">{formatAvailabilityContext(p.availability)}</span>
+                  {/*
+                    MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10
+                    #1c): same squeezed-avatar-to-score truncate shape as
+                    team-players-driving.tsx's "why" line — not confirmed
+                    to actually clip with today's (shorter) availability
+                    strings, but applying the same defensive fix: wraps up
+                    to 2 lines below `sm` instead of cutting mid-word,
+                    `sm:truncate` keeps `sm`-and-up exactly as before.
+                  */}
+                  <span className="line-clamp-2 sm:line-clamp-none sm:truncate">{formatAvailabilityContext(p.availability)}</span>
                 </div>
               </div>
               <div className="shrink-0 text-right">

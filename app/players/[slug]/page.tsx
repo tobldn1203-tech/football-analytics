@@ -93,9 +93,14 @@ export default async function PlayerProfilePage({
           style={{ background: `color-mix(in srgb, ${getTeamColor(player.teamShortName)} 35%, transparent)` }}
           aria-hidden="true"
         />
+        {/*
+          MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #5): -m-2/
+          p-2 grows the real tap target without moving the visible text —
+          same technique used on this page's Team/Match Centre siblings.
+        */}
         <Link
           href="/"
-          className="relative text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]"
+          className="relative -m-2 p-2 text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]"
         >
           ← Top performers
         </Link>
@@ -224,7 +229,23 @@ export default async function PlayerProfilePage({
         {matches.length === 0 ? (
           <p className="text-[13.5px] text-[var(--color-ink-faint)]">No matches played yet.</p>
         ) : (
-          <div className="overflow-x-auto rounded-sm border border-[var(--color-border)]">
+          <div className="relative overflow-x-auto rounded-sm border border-[var(--color-border)]">
+            {/*
+              MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #3):
+              this table's 6 columns (Opponent/Result/Mins/G/A/Rating) are
+              all real, always-visible data — unlike Top Performers, there
+              are no columns left to hide, so genuinely needs the scroll at
+              375-390px (measured: 365px of content against 333-348px
+              available). The scroll itself isn't the bug; having no hint
+              it exists was — same fade already used for the category tabs
+              and Top Performers' table (components/home/top-performers.tsx),
+              reused rather than reinvented, `from-[var(--color-canvas)]`
+              matching this section's own (unstyled/page) background.
+            */}
+            <div
+              className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--color-canvas)] to-transparent sm:hidden"
+              aria-hidden="true"
+            />
             <table className="w-full border-collapse text-[13.5px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)] text-left text-[11px] uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">

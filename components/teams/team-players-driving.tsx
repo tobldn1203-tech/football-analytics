@@ -75,11 +75,24 @@ export function TeamPlayersDriving({
                 <NationalityFlag code={player.nationalityCode} country={player.nationality} size="xs" />
                 <span className="truncate">{player.name}</span>
               </div>
-              <div className="mt-0.5 truncate text-[12px] text-[var(--color-ink-faint)]">
+              {/*
+                MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #1b):
+                `truncate` alone was cutting this sentence off mid-word at
+                375-430px — measured, the worst real row needed 453px of
+                text against a 158px budget, losing roughly two-thirds of
+                it, with no way to recover the rest on a touch device. The
+                exact same content already rendered in full at `sm` and up
+                (the row is wide enough there), so `sm:truncate` keeps
+                desktop pixel-identical; below `sm` it wraps onto up to 2
+                lines instead, which is enough room for every real
+                combined-reason string measured, and still won't grow the
+                row unboundedly if a future combination is longer.
+              */}
+              <div className="mt-0.5 line-clamp-2 text-[12px] text-[var(--color-ink-faint)] sm:line-clamp-none sm:truncate">
                 {POSITION_LABEL[player.position]} · {whys.join(" · ")}
               </div>
               {archetype.key && (
-                <div className="mt-0.5 truncate text-[11.5px] text-[var(--color-ink-faint)]">
+                <div className="mt-0.5 line-clamp-2 text-[11.5px] text-[var(--color-ink-faint)] sm:line-clamp-none sm:truncate">
                   {archetype.label}
                   {archetype.qualifier && ` · ${archetype.qualifier}`}
                 </div>

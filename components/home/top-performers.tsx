@@ -181,16 +181,59 @@ function PerformanceTable({
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-[14px]">
+    <div className="relative overflow-x-auto">
+      {/*
+        MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #3): the same
+        scroll-affordance fade as the category tabs above (CategoryTabs,
+        this file) — defensive here since #1a already removes the overflow
+        this table has today, but the wrapper stays genuinely scrollable
+        for whatever doesn't fit a future category/name, and this row
+        shouldn't be the one place in the file that hints at more content
+        one way and not the other. `from-[var(--color-surface)]` matches
+        this table's own background (the hero strip above uses
+        `--hero-bg]` instead — see CategoryTabs).
+      */}
+      <div
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--color-surface)] to-transparent sm:hidden"
+        aria-hidden="true"
+      />
+      {/*
+        MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #1a): below
+        `sm`, only #/Player/Performance render (Team/Position/Form are
+        `hidden` until `sm`/`md`) — but `table-layout: auto`'s column-width
+        algorithm was still sizing the Player column off its own content's
+        theoretical no-wrap width, which routinely exceeded what was left
+        over for Performance and clipped its quality label ("EXCELLE"
+        instead of "EXCELLENT") by 8-23px, measured, with no scroll
+        affordance hinting the rest was reachable. `table-fixed` makes the
+        two visible content columns' widths an explicit, real budget
+        instead of a content-derived guess, so Performance always gets the
+        room its own content needs. `sm:table-auto` on both the table and
+        each width below hands the layout straight back to today's
+        unconstrained desktop behaviour — verified unchanged at 1280px.
+      */}
+      <table className="w-full table-fixed border-collapse text-[14px] sm:table-auto">
         <thead>
           <tr className="border-b border-[var(--color-border)] text-left text-[11.5px] uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">
             <th className="w-8 py-2.5 pr-2 font-medium sm:pr-3">#</th>
-            <th className="px-2 py-2.5 font-medium sm:px-3">Player</th>
-            <th className="hidden px-3 py-2.5 font-medium sm:table-cell">Team</th>
-            <th className="hidden px-3 py-2.5 font-medium md:table-cell">Position</th>
-            <th className="px-2 py-2.5 text-right font-medium sm:px-3">Performance</th>
-            <th className="hidden px-3 py-2.5 text-right font-medium sm:table-cell">Form</th>
+            <th className="w-[60%] px-2 py-2.5 font-medium sm:w-auto sm:px-3">Player</th>
+            <th className="hidden w-0 px-3 py-2.5 font-medium sm:w-auto sm:table-cell">Team</th>
+            <th className="hidden w-0 px-3 py-2.5 font-medium md:w-auto md:table-cell">Position</th>
+            <th className="px-2 py-2.5 text-right font-medium sm:w-auto sm:px-3">
+              {/*
+                The DATA cells ("Excellent", "9.3") always fit this
+                column's fixed mobile width — measured, the column
+                HEADER's own uppercase, letter-spaced "Performance"
+                (105px) was the actual thing still overflowing it (91px),
+                one unbreakable word with nowhere to wrap. Same
+                short-label-below-`sm` technique already used for "My
+                Football" (components/personalisation/my-football-nav.tsx)
+                and the category tabs above, not a new pattern.
+              */}
+              <span className="sm:hidden">Perf.</span>
+              <span className="hidden sm:inline">Performance</span>
+            </th>
+            <th className="hidden w-0 px-3 py-2.5 text-right font-medium sm:w-auto sm:table-cell">Form</th>
           </tr>
         </thead>
         <tbody>
@@ -241,7 +284,24 @@ function PerformanceTable({
                             <NationalityFlag code={p.nationalityCode} country={p.nationality} size="xs" />
                             <span className="max-w-[92px] truncate sm:max-w-none">{p.name}</span>
                           </span>
-                          <span className="text-[12px] text-[var(--color-ink-faint)] sm:hidden">
+                          {/*
+                            MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md
+                            §4/§10 #1a): this line, not the capped name
+                            above it, was the Player column's actual
+                            width driver — "HUL · Goalkeeper" rendered on
+                            one unconstrained line (95px, measured) is
+                            wider than the name cap (92px), which pushed
+                            the table's natural width 22-23px past the
+                            viewport at 375-390px and clipped the
+                            Performance column's own quality label on the
+                            right. A max-width lets the longest position
+                            words ("Goalkeeper"/"Midfielder") wrap onto a
+                            second line instead of forcing the column
+                            wider — same information, no truncation,
+                            leaves sm:hidden (and therefore this whole
+                            line) untouched at sm and up.
+                          */}
+                          <span className="block text-[12px] leading-snug text-[var(--color-ink-faint)] sm:hidden">
                             {p.teamShortName} · {POSITION_LABEL[p.position]}
                           </span>
                         </span>

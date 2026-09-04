@@ -33,7 +33,11 @@ import { MyFootballNav } from "@/components/personalisation/my-football-nav";
  * light up "Teams" (you're browsing the section), not "My Football" (which
  * is specifically about your club).
  */
-const NAV_ITEMS = [
+// Exported — components/layout/bottom-nav.tsx (mobile-only persistent nav,
+// see docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #4) reuses both this list
+// and the route-matching logic below rather than keeping its own copy, so
+// the two navs can never quietly disagree about which section is active.
+export const NAV_ITEMS = [
   { label: "Players", href: "/", active: true },
   { label: "Discover", href: "/discover", active: true },
   { label: "Matches", href: "/matches", active: true },
@@ -41,7 +45,7 @@ const NAV_ITEMS = [
   { label: "Rankings", href: "#", active: false },
 ] as const;
 
-function isSectionActive(label: (typeof NAV_ITEMS)[number]["label"], pathname: string, myFootballHref: string | null): boolean {
+export function isSectionActive(label: (typeof NAV_ITEMS)[number]["label"], pathname: string, myFootballHref: string | null): boolean {
   switch (label) {
     case "Players":
       return pathname === "/" || pathname.startsWith("/players/");

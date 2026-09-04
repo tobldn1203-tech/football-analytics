@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteHeader } from "@/components/layout/site-header";
+import { BottomNav } from "@/components/layout/bottom-nav";
 import { PersonalisationProvider } from "@/components/personalisation/personalisation-provider";
 import { getAllTeams } from "@/lib/directory/repository";
 import "./globals.css";
@@ -45,10 +46,17 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${editorial.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-[var(--color-canvas)] text-[var(--color-ink)]">
+      <body className="flex min-h-full flex-col bg-[var(--color-canvas)] pb-[calc(4rem+env(safe-area-inset-bottom))] text-[var(--color-ink)] sm:pb-0">
         <PersonalisationProvider teams={teams}>
           <SiteHeader />
           {children}
+          {/*
+            MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §5/§10 #4): the
+            body's own `pb-16 sm:pb-0` above reserves room for this fixed
+            bar so it never covers the last bit of any page's content —
+            reset to nothing at `sm` and up, where BottomNav doesn't render.
+          */}
+          <BottomNav />
         </PersonalisationProvider>
         <Analytics />
       </body>

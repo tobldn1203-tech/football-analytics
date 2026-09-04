@@ -26,10 +26,13 @@ function formatKickoff(iso: string): string {
 
 export default async function MatchCentrePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ matchId: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { matchId } = await params;
+  const { from } = await searchParams;
   const data = await getMatchCentre(matchId);
   if (!data) notFound();
 
@@ -52,6 +55,22 @@ export default async function MatchCentrePage({
   } = data;
   const played = match.status === "finished" && match.homeScore !== null;
 
+  // PROVENANCE-AWARE BREADCRUMB (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §5/§10
+  // #6): this used to always say "← Gameweek N" regardless of how the
+  // user actually got here. TeamMatchHistory's own links now carry
+  // `?from=<teamId>` when a match is reached from a team's match history
+  // — if that id matches either side of THIS match, the breadcrumb
+  // honestly reflects that (name + link back to the team), falling back
+  // to the original gameweek link for every other entry point (Match
+  // Centre's own gameweek nav, a shared URL, Discover, etc.) exactly as
+  // before. No new tracking/state — one query param, read once, server-side.
+  const fromTeam = from === homeTeam.id ? homeTeam : from === awayTeam.id ? awayTeam : null;
+  const backLink = fromTeam
+    ? { href: `/teams/${fromTeam.id}`, label: `← Back to ${fromTeam.name}` }
+    : match.gameweek != null
+      ? { href: `/matches/${match.gameweek}`, label: `← Gameweek ${match.gameweek}` }
+      : null;
+
   return (
     <main className="mx-auto w-full max-w-3xl px-5 pb-12 sm:px-8">
       {/* MATCH HEADER */}
@@ -62,9 +81,15 @@ export default async function MatchCentrePage({
           aria-hidden="true"
         />
         <div className="relative flex items-center justify-between">
-          {match.gameweek != null ? (
-            <Link href={`/matches/${match.gameweek}`} className="text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]">
-              ← Gameweek {match.gameweek}
+          {/*
+            MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #5): same
+            -m-2/p-2 tap-target technique as the other back-links on this
+            page's siblings (Team, Player) — visual position/size unchanged,
+            real hit area grows into the already-empty space around it.
+          */}
+          {backLink ? (
+            <Link href={backLink.href} className="-m-2 p-2 text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]">
+              {backLink.label}
             </Link>
           ) : (
             <span />

@@ -50,7 +50,12 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
           style={{ background: "var(--hero-glow)" }}
           aria-hidden="true"
         />
-        <Link href="/teams" className="relative text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]">
+        {/*
+          MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #5): same
+          -m-2/p-2 tap-target technique as this page's Player/Match Centre
+          siblings — visual position unchanged, real hit area grows.
+        */}
+        <Link href="/teams" className="relative -m-2 p-2 text-[13px] text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]">
           ← Premier League table
         </Link>
 
@@ -139,7 +144,7 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
       {/* MATCH HISTORY */}
       <section className="mt-10">
         <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">Match history</h2>
-        <TeamMatchHistory matches={matchHistory} teamShortName={team.shortName} />
+        <TeamMatchHistory matches={matchHistory} teamId={team.id} teamShortName={team.shortName} />
       </section>
 
       {/* LEAGUE POSITION */}

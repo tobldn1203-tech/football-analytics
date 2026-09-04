@@ -46,12 +46,20 @@ export function MyFootballNav({ isActive = false }: { isActive?: boolean }) {
         same picker/dropdown; the full label returns at `sm` and up where
         there's room for it.
       */}
+      {/*
+        MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #5): icon-only
+        below `sm` (see the fix above this one) measured a 19px-wide tap
+        target — comfortable height already (`py-2`), but very little
+        width to actually hit. `px-2` below `sm` widens the real hit area
+        around the same icon without changing its visual size; `sm:px-0`
+        keeps the label variant's spacing exactly as before.
+      */}
       <button
         onClick={() => (club ? setOpen((v) => !v) : setPicking(true))}
         aria-label="My Football"
         aria-current={isActive ? "page" : undefined}
         title="My Football"
-        className={`flex shrink-0 items-center gap-1.5 py-2 text-[13.5px] transition-colors sm:py-0 sm:text-[14px] ${
+        className={`flex shrink-0 items-center gap-1.5 px-2 py-2 text-[13.5px] transition-colors sm:px-0 sm:py-0 sm:text-[14px] ${
           isActive ? "font-semibold text-[var(--color-ink)]" : "font-medium text-[var(--color-ink-faint)] hover:text-[var(--color-ink)]"
         }`}
       >

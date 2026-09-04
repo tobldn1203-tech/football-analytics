@@ -48,9 +48,18 @@ export function PreferencesModal({ onClose }: { onClose: () => void }) {
                 Which Premier League club do you support?
               </h2>
             </div>
+            {/*
+              MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #5):
+              measured 74x19px — the smallest target in the app, and the
+              first interaction most new users have. `-m-2` cancels `p-2`
+              exactly, so "Skip for now" renders in the identical visual
+              position (same size, same baseline) while the button's real,
+              padding-included hit area grows into the already-empty space
+              around it rather than anywhere a neighbour would need to move.
+            */}
             <button
               onClick={skip}
-              className="shrink-0 text-[12.5px] font-medium text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]"
+              className="-m-2 shrink-0 p-2 text-[12.5px] font-medium text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink)]"
             >
               Skip for now
             </button>

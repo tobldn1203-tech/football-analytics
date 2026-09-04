@@ -14,10 +14,16 @@ export function GameweekNav({
 
   return (
     <div className="relative mt-6 flex items-center justify-between gap-3">
+      {/*
+        MOBILE FIX (docs/MOBILE_FIRST_PRODUCT_AUDIT.md §4/§10 #5): same
+        -m-2/p-2 tap-target technique used on every other back/forward
+        text link in the app — visual position unchanged, real hit area
+        grows into the already-empty space around it.
+      */}
       {prev ? (
         <Link
           href={`/matches/${prev}`}
-          className="text-[13px] font-medium text-[var(--hero-ink-soft)] hover:text-[var(--hero-ink)]"
+          className="-m-2 p-2 text-[13px] font-medium text-[var(--hero-ink-soft)] hover:text-[var(--hero-ink)]"
         >
           ← Gameweek {prev}
         </Link>
@@ -30,7 +36,7 @@ export function GameweekNav({
       {next ? (
         <Link
           href={`/matches/${next}`}
-          className="text-[13px] font-medium text-[var(--hero-ink-soft)] hover:text-[var(--hero-ink)]"
+          className="-m-2 p-2 text-[13px] font-medium text-[var(--hero-ink-soft)] hover:text-[var(--hero-ink)]"
         >
           Gameweek {next} →
         </Link>
