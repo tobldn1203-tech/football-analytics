@@ -230,13 +230,23 @@ export interface PerformanceLeader {
   nationality?: string | null;
   nationalityCode?: string | null;
   score: number;
+  /** Added for the "Who ran the show" top-3 list (see computeLeaders) — teamRepository.ts's `bestPerformer` consumer doesn't read these, but structural typing means adding fields here can't break it. */
+  position: PositionCode;
+  minutes: number;
+  qualityLabel: string;
+  lowMinutes: boolean;
 }
 
 export interface PerformanceLeaders {
+  /** Rank #1 of `top` — kept as its own field because teamRepository.ts's
+   * Team Match History ("Best performer" column) reads this directly and
+   * has nothing to do with "Who ran the show" or the category-leader
+   * concept removed below; do not remove without checking that consumer. */
   bestPerformer: PerformanceLeader | null;
-  strongestAttack: PerformanceLeader | null;
-  strongestCreation: PerformanceLeader | null;
-  strongestDefence: PerformanceLeader | null;
+  /** Up to 3 players, ranked by scores.overall descending — what "Who ran
+   * the show" renders. Fewer than 3 if fewer than 3 players on this side
+   * cleared the ranking engine's minimum-minutes floor for this match. */
+  top: PerformanceLeader[];
 }
 
 export interface MatchSnapshot {
@@ -314,52 +324,49 @@ export function computeTeamPerformance(members: SquadMember[]): TeamPerformanceS
 }
 
 /**
- * PERFORMANCE LEADERS — best overall performer plus, only where the
- * category score genuinely clears the same MATCH_STRENGTH_MIN bar used for
- * `matchStrength` elsewhere in this file. A team's *highest* attack score
- * is never shown as "strongest attack" if nobody actually attacked well —
- * the brief's own instruction ("avoid unreliable conclusions") maps
- * directly onto the threshold already established for Match Strength.
+ * PERFORMANCE LEADERS — "Who ran the show" simplified to a plain top-3 by
+ * overall Match Rating (`scores.overall`, the exact same field Squad
+ * Performance and the player page already show for this player-match).
+ * Previously computed a per-category leader (strongest attack/creation/
+ * defence) too — removed by product decision, not a data change: those
+ * category scores were always correctly computed, just easy to misread as
+ * a second, competing "rating" next to Squad Performance's overall one
+ * (see docs — the Palacios/Fulham v Crystal Palace investigation).
+ *
+ * Eligibility is exactly the one rule already used everywhere else a
+ * player becomes "rated" in this file: `rating !== null`, i.e. cleared the
+ * ranking engine's minimum-minutes floor for this match (see SquadMember's
+ * own doc comment). No new threshold invented for who can appear here.
+ *
+ * Tie-break: none, deliberately — no ranking anywhere else in this
+ * codebase (Top Performers, the homepage rankings, category leaderboards)
+ * applies an explicit secondary sort key either; ties fall back to
+ * JavaScript's stable sort preserving the incoming (query) order, the same
+ * as every other `.sort((a, b) => b.score - a.score)` in this app.
  */
-export function computeLeaders(members: SquadMember[], ratingByPlayerId: Map<string, MatchRating>): PerformanceLeaders {
+export function computeLeaders(members: SquadMember[]): PerformanceLeaders {
   const rated = members.filter((m) => m.rating !== null);
 
-  const bestPerformer = [...rated].sort((a, b) => b.rating!.score - a.rating!.score)[0] ?? null;
-
-  const byCategory = (key: "attack" | "creation" | "defence"): PerformanceLeader | null => {
-    let best: { member: SquadMember; score: number } | null = null;
-    for (const m of rated) {
-      const score = ratingByPlayerId.get(m.playerId)?.scores[key] ?? 0;
-      if (score >= MATCH_STRENGTH_MIN && (!best || score > best.score)) best = { member: m, score };
-    }
-    return best
-      ? {
-          playerId: best.member.playerId,
-          slug: best.member.slug,
-          name: best.member.name,
-          photoUrl: best.member.photoUrl,
-          nationality: best.member.nationality,
-          nationalityCode: best.member.nationalityCode,
-          score: best.score,
-        }
-      : null;
-  };
+  const top: PerformanceLeader[] = [...rated]
+    .sort((a, b) => b.rating!.score - a.rating!.score)
+    .slice(0, 3)
+    .map((m) => ({
+      playerId: m.playerId,
+      slug: m.slug,
+      name: m.name,
+      photoUrl: m.photoUrl,
+      nationality: m.nationality,
+      nationalityCode: m.nationalityCode,
+      position: m.position,
+      minutes: m.minutes,
+      score: m.rating!.score,
+      qualityLabel: m.rating!.label,
+      lowMinutes: m.rating!.lowMinutes,
+    }));
 
   return {
-    bestPerformer: bestPerformer
-      ? {
-          playerId: bestPerformer.playerId,
-          slug: bestPerformer.slug,
-          name: bestPerformer.name,
-          photoUrl: bestPerformer.photoUrl,
-          nationality: bestPerformer.nationality,
-          nationalityCode: bestPerformer.nationalityCode,
-          score: bestPerformer.rating!.score,
-        }
-      : null,
-    strongestAttack: byCategory("attack"),
-    strongestCreation: byCategory("creation"),
-    strongestDefence: byCategory("defence"),
+    bestPerformer: top[0] ?? null,
+    top,
   };
 }
 
@@ -520,8 +527,8 @@ export async function getMatchCentre(matchId: string): Promise<MatchCentreData |
 
   const homeTeamPerformance = computeTeamPerformance(homeMembers);
   const awayTeamPerformance = computeTeamPerformance(awayMembers);
-  const homeLeaders = computeLeaders(homeMembers, ratingByPlayerId);
-  const awayLeaders = computeLeaders(awayMembers, ratingByPlayerId);
+  const homeLeaders = computeLeaders(homeMembers);
+  const awayLeaders = computeLeaders(awayMembers);
 
   const standoutMember = [...allMembers]
     .filter((m) => m.rating !== null)
