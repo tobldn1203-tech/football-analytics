@@ -1,34 +1,44 @@
 import { getTopPerformers, getHomepageDiscover } from "@/lib/analytics/scoring/repository";
 import { getAllClubFixtureSnapshots, type ClubFixtureSnapshot } from "@/lib/analytics/scoring/matchRepository";
+import { getLeagueStandings, type TeamStanding } from "@/lib/analytics/scoring/teamRepository";
 import { getPlayerAvailabilityMap } from "@/lib/analytics/availability/repository";
 import { getAllTeams } from "@/lib/directory/repository";
 import { buildWorthKnowingInsight, type WorthKnowingInsight } from "@/lib/analytics/availability/worthKnowing";
+import { LeagueLeadersHero } from "@/components/home/league-leaders-hero";
 import { TopPerformers } from "@/components/home/top-performers";
 import { DiscoverTeaser } from "@/components/home/discover-teaser";
 import { MyFootballWidget } from "@/components/home/my-football-widget";
+import { LeagueContextPanel } from "@/components/home/league-context-panel";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import type { RankedPlayer } from "@/lib/analytics/scoring/types";
 
 export const revalidate = 300;
 
 export default async function Home() {
-  let content;
+  let players: RankedPlayer[] = [];
+  let sampleNote = "";
+  let errorMessage: string | null = null;
   let discover = null;
   let fixtures: Record<string, ClubFixtureSnapshot> = {};
+  let standings: TeamStanding[] = [];
   let standoutByTeam: Record<string, RankedPlayer> = {};
   let insightByTeam: Record<string, string> = {};
   let worthKnowingByTeam: Record<string, WorthKnowingInsight> = {};
 
   try {
-    const [{ players, sampleNote }, discoverData, fixtureSnapshots, teamDirectory] = await Promise.all([
+    const [topPerformers, discoverData, fixtureSnapshots, standingsData, teamDirectory] = await Promise.all([
       getTopPerformers(),
       getHomepageDiscover(),
       getAllClubFixtureSnapshots(),
+      getLeagueStandings(),
       getAllTeams(),
     ]);
+    players = topPerformers.players;
+    sampleNote = topPerformers.sampleNote;
     const teamNameByShortName = new Map(teamDirectory.map((t) => [t.shortName, t.name]));
     discover = discoverData;
     fixtures = fixtureSnapshots;
+    standings = standingsData;
 
     // Standout player per club — the existing overall Performance score,
     // grouped by team and taking the top one. No new analytics: same
@@ -84,24 +94,8 @@ export default async function Home() {
       const insight = buildWorthKnowingInsight(teamName, teamPlayers, availabilityMap);
       if (insight) worthKnowingByTeam[teamShortName] = insight;
     }
-
-    if (players.length === 0) {
-      content = (
-        <div className="rounded-sm border border-dashed border-[var(--color-border-strong)] px-5 py-10 text-center text-[14px] text-[var(--color-ink-faint)]">
-          No data yet — run <code className="font-mono">npm run ingest</code> to load the
-          current season.
-        </div>
-      );
-    } else {
-      content = <TopPerformers players={players} sampleNote={sampleNote} />;
-    }
   } catch (err) {
-    content = (
-      <div className="rounded-sm border border-dashed border-[var(--color-border-strong)] px-5 py-10 text-center text-[14px] text-[var(--color-ink-faint)]">
-        Data is temporarily unavailable
-        {err instanceof Error ? `: ${err.message}` : "."}
-      </div>
-    );
+    errorMessage = err instanceof Error ? err.message : "Data is temporarily unavailable.";
   }
 
   return (
@@ -136,16 +130,52 @@ export default async function Home() {
         </CollapsibleSection>
       </div>
 
-      <MyFootballWidget
-        fixtures={fixtures}
-        standoutByTeam={standoutByTeam}
-        insightByTeam={insightByTeam}
-        worthKnowingByTeam={worthKnowingByTeam}
-      />
+      {errorMessage || players.length === 0 ? (
+        <div className="rounded-sm border border-dashed border-[var(--color-border-strong)] px-5 py-10 text-center text-[14px] text-[var(--color-ink-faint)]">
+          {errorMessage
+            ? `Data is temporarily unavailable: ${errorMessage}`
+            : (
+              <>
+                No data yet — run <code className="font-mono">npm run ingest</code> to load the current season.
+              </>
+            )}
+        </div>
+      ) : (
+        <>
+          {/*
+            LEAGUE LEADERS — the new cinematic masthead, then the full
+            ranked table directly beneath it (see both components' own
+            comments and docs/VISUAL_UX_REIMAGINATION.md §5/§13). Same
+            `players`/`sampleNote` TopPerformers always received — no new
+            data, no new query.
+          */}
+          <div className="mb-6">
+            <LeagueLeadersHero players={players} sampleNote={sampleNote} />
+          </div>
+          <div className="mb-8">
+            <TopPerformers players={players} sampleNote={sampleNote} />
+          </div>
+        </>
+      )}
+
+      {/*
+        MY FOOTBALL / LEAGUE CONTEXT — a CSS auto-fit grid, deliberately not
+        a component-level "is a club supported" check: MyFootballWidget
+        already renders nothing (returns null) when no club is set, which
+        with `auto-fit` means the grid simply collapses to LeagueContextPanel
+        alone at full width — no client-side layout logic duplicated here.
+      */}
+      <div className="mb-8 grid items-start gap-6 lg:grid-cols-[repeat(auto-fit,minmax(340px,1fr))]">
+        <MyFootballWidget
+          fixtures={fixtures}
+          standoutByTeam={standoutByTeam}
+          insightByTeam={insightByTeam}
+          worthKnowingByTeam={worthKnowingByTeam}
+        />
+        <LeagueContextPanel standings={standings} />
+      </div>
 
       {discover && <DiscoverTeaser discover={discover} />}
-
-      {content}
     </main>
   );
 }

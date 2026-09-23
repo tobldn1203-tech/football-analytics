@@ -17,12 +17,15 @@ import { WhyPanel } from "./why-panel";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 /**
- * The homepage's centrepiece: a dark editorial masthead (kicker, headline,
- * category navigation) flowing into a light, highly scannable ranking
- * table that visually "docks" onto it. The dark band is a fixed brand
- * surface (see globals.css) — it doesn't invert with system dark mode,
- * the same way a newspaper's banner doesn't change with the reader's
- * settings.
+ * FULL RANKINGS — the scannable table underneath the homepage's League
+ * Leaders hero (components/home/league-leaders-hero.tsx). This component
+ * used to carry its own dark editorial masthead (kicker/headline/glow) —
+ * that masthead is retired; League Leaders is now that moment. Everything
+ * below this comment (category navigation, the ranking table, the expand-
+ * in-place "why" panel) is the exact same logic and data as before,
+ * restyled from the fixed-dark `--hero-*` tokens onto the normal
+ * theme-aware `--color-*` surface, since this section is no longer inside
+ * a masthead — see docs/VISUAL_UX_REIMAGINATION.md.
  */
 export function TopPerformers({
   players,
@@ -42,29 +45,15 @@ export function TopPerformers({
   }, [players, active, definition.available]);
 
   return (
-    <section>
-      <div data-hero className="relative overflow-hidden rounded-t-xl bg-[var(--hero-bg)] px-5 pb-0 pt-8 sm:px-8 sm:pt-10">
-        {/* subtle radial glow — depth without a loud gradient */}
-        <div
-          className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full blur-3xl"
-          style={{ background: "var(--hero-glow)" }}
-          aria-hidden="true"
-        />
-
-        <p className="relative text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[var(--hero-accent)]">
-          Premier League · 2026/27
-        </p>
-        <h1 className="relative mt-2 font-display text-[32px] font-semibold leading-none tracking-tight text-[var(--hero-ink)] sm:text-[40px]">
-          Top Performers
-        </h1>
-        <p className="relative mt-3 max-w-md text-[14px] leading-relaxed text-[var(--hero-ink-soft)]">
-          Who&rsquo;s performing at the highest level this season.
-        </p>
-
+    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 pt-5 pb-5 sm:px-8 sm:pb-7">
+      <div className="px-2 sm:px-0">
+        <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">
+          Full rankings
+        </h2>
         <CategoryTabs active={active} onChange={setActive} />
       </div>
 
-      <div className="rounded-b-xl border border-t-0 border-[var(--color-border)] bg-[var(--color-surface)] px-3 pt-4 sm:px-8">
+      <div className="mt-4 px-2 sm:px-0">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
           <p className="text-[13.5px] text-[var(--color-ink-soft)]">{definition.description}</p>
           <p className="text-[12px] text-[var(--color-ink-faint)]">
@@ -103,7 +92,7 @@ function CategoryTabs({
     <div
       role="tablist"
       aria-label="Performance category"
-      className="relative mt-5 flex gap-1 overflow-x-auto py-1"
+      className="relative mt-4 flex gap-1 overflow-x-auto py-1"
     >
       {/*
         MOBILE FIX (docs/MOBILE_EXPERIENCE_AUDIT.md, "no visual affordance
@@ -112,7 +101,7 @@ function CategoryTabs({
         shown on narrow widths where this row is most likely to overflow.
       */}
       <div
-        className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--hero-bg)] to-transparent sm:hidden"
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--color-surface)] to-transparent sm:hidden"
         aria-hidden="true"
       />
       {CATEGORY_DEFINITIONS.map((c) => {
@@ -139,7 +128,7 @@ function CategoryTabs({
               // realistic phone widths); the full icon+label version
               // returns unchanged at `sm` and up.
               "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-t-md px-2.5 py-2 text-[13.5px] font-medium transition-colors sm:px-3 sm:py-2.5",
-              isActive ? "text-[var(--hero-ink)]" : "text-[var(--hero-ink-faint)] hover:text-[var(--hero-ink-soft)]",
+              isActive ? "text-[var(--color-ink)]" : "text-[var(--color-ink-faint)] hover:text-[var(--color-ink-soft)]",
               !c.available && "cursor-not-allowed opacity-50"
             )}
           >
@@ -152,7 +141,7 @@ function CategoryTabs({
                   className="h-1 w-1 shrink-0 rounded-full bg-current sm:hidden"
                   aria-hidden="true"
                 />
-                <span className="hidden rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:inline">
+                <span className="hidden rounded-full bg-[var(--color-surface-2)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:inline">
                   Soon
                 </span>
               </>
@@ -160,10 +149,10 @@ function CategoryTabs({
           </button>
         );
       })}
-      <div className="absolute bottom-0 left-0 h-px w-full bg-[var(--hero-border)]" />
+      <div className="absolute bottom-0 left-0 h-px w-full bg-[var(--color-border)]" />
       {indicator && (
         <div
-          className="absolute bottom-0 h-[2px] rounded-full bg-[var(--hero-accent)] transition-all duration-300 ease-out"
+          className="absolute bottom-0 h-[2px] rounded-full bg-[var(--color-accent)] transition-all duration-300 ease-out"
           style={{ left: indicator.left, width: indicator.width }}
         />
       )}

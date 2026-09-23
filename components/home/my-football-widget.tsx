@@ -62,6 +62,16 @@ const RESULT_COLOR = {
  * primary link, the facts row's individual Links still siblings of it
  * (never nested inside the `<a>`, exactly the constraint the original
  * rework enforced — verified with zero nested anchors, same as before).
+ *
+ * FLOODLIT / DAY MATCH PASS (see docs/VISUAL_UX_REIMAGINATION.md): purely a
+ * presentation change on top of the same structure above — every prop,
+ * every conditional, every data access is untouched. The card now reads as
+ * a smaller, quieter continuation of the homepage's new League Leaders
+ * hero rather than a separate dashboard widget: the same club-colour
+ * rim-light treatment used behind a League Leaders portrait now sits behind
+ * the crest here, and the club name takes the same display typeface as the
+ * hero's player names — "your club, in the same universe," one register
+ * down, not a different visual system.
  */
 export function MyFootballWidget({
   fixtures,
@@ -103,8 +113,8 @@ export function MyFootballWidget({
 
   return (
     <div
-      className="mb-8 overflow-hidden rounded-xl border border-[var(--color-border)]"
-      style={{ borderLeftColor: accent, borderLeftWidth: 3 }}
+      className="overflow-hidden rounded-2xl border"
+      style={{ borderColor: `color-mix(in srgb, ${accent} 22%, var(--color-border))` }}
     >
       {/* CLUB IDENTITY + INTELLIGENCE — one link, one destination. Crest and
           name anchor "this is my club"; the intelligence line is the reason
@@ -115,18 +125,33 @@ export function MyFootballWidget({
           not this Link, so the facts row below shares the same card. */}
       <Link
         href={teamHref}
-        className="group flex items-start gap-3.5 px-5 py-4 transition-colors hover:bg-[var(--color-surface-2)] sm:items-center sm:gap-4 sm:px-6"
+        className="group relative flex items-start gap-4 overflow-hidden px-5 py-5 transition-colors hover:bg-[var(--color-surface-2)] sm:items-center sm:gap-5 sm:px-6 sm:py-6"
       >
-        <TeamCrest crestUrl={club.crestUrl} shortName={club.shortName} size="lg" />
-        <div className="min-w-0 flex-1">
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-[var(--color-ink-faint)]">
+        {/* club-colour rim-light — the same identity-light treatment behind
+            a League Leaders portrait, at widget scale: "your club, in the
+            same universe." Purely decorative, behind the real content. */}
+        <span
+          className="pointer-events-none absolute -left-6 -top-10 h-32 w-32 rounded-full blur-3xl"
+          style={{ background: `color-mix(in srgb, ${accent} 30%, transparent)` }}
+          aria-hidden="true"
+        />
+        <span className="relative shrink-0">
+          <span
+            className="pointer-events-none absolute inset-0 -z-10 scale-150 rounded-full blur-xl"
+            style={{ background: `color-mix(in srgb, ${accent} 24%, transparent)` }}
+            aria-hidden="true"
+          />
+          <TeamCrest crestUrl={club.crestUrl} shortName={club.shortName} size="lg" />
+        </span>
+        <div className="relative min-w-0 flex-1">
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em]" style={{ color: accent }}>
             My club
           </p>
-          <p className="font-display truncate text-[18px] font-semibold tracking-tight text-[var(--color-ink)] sm:text-[19px]">
+          <p className="font-display truncate text-[20px] font-semibold tracking-tight text-[var(--color-ink)] sm:text-[23px]">
             {club.name}
           </p>
           {primaryLine && (
-            <p className="mt-1 text-[12.5px] leading-snug text-[var(--color-ink-soft)]">{primaryLine}</p>
+            <p className="mt-1.5 text-[13px] leading-snug text-[var(--color-ink-soft)]">{primaryLine}</p>
           )}
           {secondaryLine && (
             <p className="mt-0.5 text-[11.5px] leading-snug text-[var(--color-ink-faint)]">{secondaryLine}</p>
@@ -135,11 +160,11 @@ export function MyFootballWidget({
             <p className="mt-0.5 text-[11px] italic leading-snug text-[var(--color-ink-faint)]">{voiceLine}</p>
           )}
         </div>
-        <span className="hidden shrink-0 items-center gap-1 self-center text-[12.5px] font-medium text-[var(--color-ink-soft)] transition-colors group-hover:text-[var(--color-accent)] sm:flex">
+        <span className="relative hidden shrink-0 items-center gap-1 self-center text-[12.5px] font-medium text-[var(--color-ink-soft)] transition-colors group-hover:text-[var(--color-accent)] sm:flex">
           Explore Team Intelligence
           <ChevronRight />
         </span>
-        <ChevronRight className="mt-1 shrink-0 self-start text-[var(--color-ink-faint)] transition-colors group-hover:text-[var(--color-accent)] sm:hidden" />
+        <ChevronRight className="relative mt-1 shrink-0 self-start text-[var(--color-ink-faint)] transition-colors group-hover:text-[var(--color-accent)] sm:hidden" />
       </Link>
 
       {/* QUICK FACTS — visually secondary, small sibling links (never
