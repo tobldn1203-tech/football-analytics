@@ -158,8 +158,16 @@ describe("Defence: experimental team-outcome weighting", () => {
     };
   }
 
+  // { applyReliability: false } isolates the raw 70/30 blend this suite
+  // hand-calculates exact expected values for — every fixture below uses a
+  // tiny 2-3 player pool at a uniform 90 minutes, which is exactly the
+  // shape the minutes-aware reliability shrinkage (see
+  // docs/PLAYER_INTELLIGENCE_MINUTES_DESIGN.md) is designed to blend toward
+  // a prior computed from that same small pool — a real, separate concern
+  // from what this suite tests. Same reasoning as matchRating.ts's own use
+  // of this option; the 70/30 weighting itself is completely unchanged.
   function defenceScoreOf(id: string, players: PlayerPerformanceInput[]): number {
-    const { players: ranked } = computeProvisionalRankings(players);
+    const { players: ranked } = computeProvisionalRankings(players, { applyReliability: false });
     return ranked.find((p) => p.playerId === id)!.scores.defence!;
   }
 
@@ -245,7 +253,7 @@ describe("Defence: experimental team-outcome weighting", () => {
     const mid2 = outfieldPlayer("mid2", "MID", 4);
     const fwd1 = outfieldPlayer("fwd1", "FWD", 8);
     const fwd2 = outfieldPlayer("fwd2", "FWD", 2);
-    const { players } = computeProvisionalRankings([mid1, mid2, fwd1, fwd2]);
+    const { players } = computeProvisionalRankings([mid1, mid2, fwd1, fwd2], { applyReliability: false });
 
     // Plain percentile of defensiveActions alone: within each 2-player
     // position group, high value -> 100th pct -> 10.0, low value -> 0th -> 0.0.

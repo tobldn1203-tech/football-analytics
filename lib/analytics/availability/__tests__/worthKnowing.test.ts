@@ -12,7 +12,7 @@ function mkPlayer(id: string, name: string, overall: number, matches = 1): Ranke
     teamId: "team-hul",
     teamShortName: "HUL",
     position: "MID",
-    sample: { matches, minutes: matches * 90, confidence: classifySampleConfidence(matches) },
+    sample: { matches, minutes: matches * 90, confidence: classifySampleConfidence(matches * 90) },
     scores: { overall },
     qualityLabel: qualityLabelFor(overall),
     photoUrl: null,

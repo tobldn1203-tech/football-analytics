@@ -223,7 +223,16 @@ export async function getTeamProfile(teamId: string): Promise<TeamProfileData | 
   };
 
   const matchesPlayed = standing?.played ?? 0;
-  const confidence = classifySampleConfidence(matchesPlayed);
+  // classifySampleConfidence is minutes-based now (see types.ts) — this is
+  // TEAM-level confidence (how many matches has the team played), not a
+  // player's own minutes, so `totalMinutes` above (summed across the whole
+  // roster) isn't the right input here; it's a different scale entirely
+  // (11 players × ~90 minutes per match, not one player's game time).
+  // `matchesPlayed * 90` converts the team's match count into the same
+  // "full-match-equivalent minutes" unit the thresholds are defined in,
+  // reproducing this call site's exact prior classification (3/8 matches →
+  // 270/720 minutes is the same boundary either way).
+  const confidence = classifySampleConfidence(matchesPlayed * 90);
 
   // A synthetic RankedPlayer-shaped object purely so detectStrengths (an
   // already-battle-tested, confidence-gated function) can be reused

@@ -30,13 +30,50 @@ export interface SampleSize {
 }
 
 /**
- * Sensible, un-fancy thresholds — no statistical shrinkage yet, just an
- * honest label so small samples aren't presented with false confidence.
+ * MINUTES-BASED, not matches-based — see docs/MINUTES_SAMPLE_RELIABILITY_AUDIT.md
+ * and docs/PLAYER_INTELLIGENCE_MINUTES_DESIGN.md §9. Counting matches let a
+ * player clear "low" confidence by accumulating enough short substitute
+ * cameos without ever accumulating meaningful playing time (4 appearances
+ * of 15 minutes each classified identically to 4 full 90-minute matches).
+ *
+ * The thresholds are 3 and 8 *full matches'* worth of minutes (90 × 3 = 270,
+ * 90 × 8 = 720) — not new numbers invented for this change. A player who
+ * starts and plays every minute crosses these boundaries at exactly the
+ * same point as under the old matches-based rule; only players who
+ * accumulate matches without accumulating minutes are reclassified.
  */
-export function classifySampleConfidence(matches: number): SampleConfidence {
-  if (matches < 3) return "low";
-  if (matches < 8) return "moderate";
+export function classifySampleConfidence(minutes: number): SampleConfidence {
+  if (minutes < 270) return "low";
+  if (minutes < 720) return "moderate";
   return "established";
+}
+
+/**
+ * RELIABILITY SHRINKAGE — see docs/PLAYER_INTELLIGENCE_MINUTES_DESIGN.md §16
+ * for the full derivation. Continuous, asymptotic, minutes-based weight
+ * used by `computeProvisionalRankings` to blend an observed category score
+ * with a neutral (position-and-category) prior: `raw * r + prior * (1 - r)`.
+ *
+ * r → 0 as minutes → 0 (no evidence: fully trust the prior)
+ * r → 1 as minutes → ∞ (never fully "certain", but effectively so past a
+ *   few hundred minutes)
+ * r = 0.5 exactly at minutes = K
+ *
+ * K = 90 (one full match) was chosen, not an arbitrary round number, because
+ * it's the largest tested value that still leaves a player who has played
+ * every available minute so far (this early in a season, ~360 minutes) close
+ * to fully trusted (r ≈ 0.8), while meaningfully tempering a 50-95 minute
+ * sample (r ≈ 0.35-0.5) — see the design doc's §6.1 for the K sweep that
+ * ruled out 180/270/360/450 (all of which shrink even a player who's never
+ * missed a minute too aggressively at the current early-season minutes
+ * scale). Exported so every consumer of "how much evidence is this" —
+ * confidence, ranking, and any future Best XI/Player Comparison eligibility
+ * logic — reads the same primitive rather than inventing its own.
+ */
+export const RELIABILITY_K = 90;
+
+export function evidenceReliability(minutes: number, K: number = RELIABILITY_K): number {
+  return minutes / (minutes + K);
 }
 
 /**

@@ -2,6 +2,7 @@ import type { PositionCode } from "@/lib/competitions/premier-league";
 import { percentileRank } from "./percentile";
 import {
   classifySampleConfidence,
+  evidenceReliability,
   qualityLabelFor,
   type Category,
   type RankedPlayer,
@@ -52,6 +53,32 @@ import {
  * two can diverge (a player can be "8.2 Performance, 9.1 Form" or the
  * reverse). See lib/analytics/intelligence for the higher-level Form/
  * Consistency/Momentum concepts built on top of this engine's output.
+ *
+ * MINUTES-AWARE RELIABILITY — see docs/PLAYER_INTELLIGENCE_MINUTES_DESIGN.md
+ * (Model D) for the full design and its real-data validation. Attack,
+ * Creation, Defence and Impact are each shrunk toward a position-and-
+ * category prior (the mean raw score for that position/category across the
+ * currently-eligible pool) by `evidenceReliability(minutes)` — a continuous,
+ * asymptotic weight, never a hard cliff — BEFORE they're blended into
+ * Overall, so every downstream reader of individual category scores
+ * (`explainPlayer`, `detectStrengths`, archetype shape classification, Team
+ * Intelligence's "why" slots) inherits the correction automatically, with
+ * no changes needed in those files. This is a targeted addition, not a
+ * second scoring system: the percentile mechanics, position weights, and
+ * Defence's 70/30 individual/clean-sheet blend above are completely
+ * unchanged — only how confidently a category's own already-computed
+ * number gets trusted, given how much of the season backs it.
+ *
+ * Form is deliberately NOT shrunk — it isn't part of the Overall blend, and
+ * nothing downstream currently gates on its confidence.
+ *
+ * The `applyReliability` option (default true) exists for exactly one
+ * caller: `matchRating.ts`'s `computeMatchRatings` passes `false`, because a
+ * Match Rating's "season" is deliberately one single gameweek by design —
+ * shrinking a match-level score toward a prior using that same gameweek's
+ * own minutes would just be a second, redundant volatility dampener on a
+ * number that's supposed to stay exactly as responsive as it already is.
+ * See that file's own doc comment for why matches:1 is intentional there.
  */
 
 const MIN_MINUTES = 45; // early-season floor: at least half a match played
@@ -226,8 +253,13 @@ export interface ProvisionalRankingResult {
 }
 
 export function computeProvisionalRankings(
-  inputs: PlayerPerformanceInput[]
+  inputs: PlayerPerformanceInput[],
+  options?: { applyReliability?: boolean }
 ): ProvisionalRankingResult {
+  // Default true: every season-level caller (Top Performers, player pages,
+  // Team Intelligence, Discover) wants the shrinkage. `matchRating.ts`
+  // passes false — see this file's own module comment for why.
+  const applyReliability = options?.applyReliability ?? true;
   const eligible = inputs.filter((p) => p.season.minutes >= MIN_MINUTES);
   const per90ByPlayer = new Map(eligible.map((p) => [p.id, computePer90(p)]));
 
@@ -275,20 +307,61 @@ export function computeProvisionalRankings(
     players.forEach((p, i) => defenceScoreByPlayerId.set(p.id, defenceForGroup[i]));
   }
 
+  // --- Reliability priors: position-and-category average of the RAW
+  // (pre-shrinkage) scores above, computed fresh from the current eligible
+  // pool every call — not a fixed constant, so it moves with the season's
+  // overall level. Computed unconditionally (cheap); only consumed below
+  // when applyReliability is true. ---
+  type ShrinkableCategory = "attack" | "creation" | "defence" | "impact";
+  const priorSumByPosition = new Map<PositionCode, Record<ShrinkableCategory, number>>();
+  const priorCountByPosition = new Map<PositionCode, number>();
+  eligible.forEach((p, i) => {
+    const sums = priorSumByPosition.get(p.position) ?? { attack: 0, creation: 0, defence: 0, impact: 0 };
+    sums.attack += attackScores[i];
+    sums.creation += creationScores[i];
+    sums.defence += defenceScoreByPlayerId.get(p.id) ?? 0;
+    sums.impact += impactScores[i];
+    priorSumByPosition.set(p.position, sums);
+    priorCountByPosition.set(p.position, (priorCountByPosition.get(p.position) ?? 0) + 1);
+  });
+  const priorFor = (position: PositionCode, category: ShrinkableCategory): number => {
+    const count = priorCountByPosition.get(position) ?? 0;
+    if (count === 0) return 0;
+    return priorSumByPosition.get(position)![category] / count;
+  };
+
   const players: RankedPlayer[] = eligible.map((p, i) => {
     const weights = OVERALL_WEIGHTS[p.position];
-    const defence = defenceScoreByPlayerId.get(p.id) ?? 0;
+    const rawAttack = attackScores[i];
+    const rawCreation = creationScores[i];
+    const rawDefence = defenceScoreByPlayerId.get(p.id) ?? 0;
+    const rawImpact = impactScores[i];
+
+    // Shrink each category toward its position-and-category prior by how
+    // much of the season backs it — reliability(minutes) is 0 with no
+    // evidence (fully trust the prior) and asymptotically approaches 1 as
+    // minutes accumulate (fully trust the observed rate), never a cliff.
+    // Form is deliberately excluded — see this file's module comment.
+    const reliability = evidenceReliability(p.season.minutes);
+    const shrink = (raw: number, category: ShrinkableCategory) =>
+      applyReliability ? raw * reliability + priorFor(p.position, category) * (1 - reliability) : raw;
+
+    const attack = shrink(rawAttack, "attack");
+    const creation = shrink(rawCreation, "creation");
+    const defence = shrink(rawDefence, "defence");
+    const impact = shrink(rawImpact, "impact");
+
     const overall =
-      attackScores[i] * weights.attack +
-      creationScores[i] * weights.creation +
+      attack * weights.attack +
+      creation * weights.creation +
       defence * weights.defence +
-      impactScores[i] * weights.impact;
+      impact * weights.impact;
 
     const scores: RankedPlayer["scores"] = {
-      attack: round1(attackScores[i]),
-      creation: round1(creationScores[i]),
+      attack: round1(attack),
+      creation: round1(creation),
       defence: round1(defence),
-      impact: round1(impactScores[i]),
+      impact: round1(impact),
       form: round1(formScores[i]),
       overall: round1(overall),
     };
@@ -307,7 +380,7 @@ export function computeProvisionalRankings(
       sample: {
         matches: p.season.matches,
         minutes: p.season.minutes,
-        confidence: classifySampleConfidence(p.season.matches),
+        confidence: classifySampleConfidence(p.season.minutes),
       },
       scores,
       qualityLabel: qualityLabelFor(scores.overall ?? 0),

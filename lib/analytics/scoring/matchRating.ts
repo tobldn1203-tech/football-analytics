@@ -32,6 +32,17 @@ import type { RankedPlayer } from "./types";
  * single-gameweek) comparison pool, which is why it is far more volatile
  * week to week than a season score and must never be presented as
  * interchangeable with one.
+ *
+ * MINUTES-AWARE RELIABILITY (see docs/PLAYER_INTELLIGENCE_MINUTES_DESIGN.md
+ * §13) is deliberately NOT applied here — `computeProvisionalRankings` is
+ * called with `{ applyReliability: false }` below. That shrinkage exists to
+ * stop a *season* score from treating a handful of cameo minutes as
+ * equivalent to a full season's evidence; a Match Rating's "season" is
+ * intentionally always exactly one gameweek (`matches: 1` above), so
+ * shrinking it toward a prior using that same gameweek's own minutes would
+ * just be a second, redundant volatility dampener on a number that's
+ * supposed to stay exactly as responsive to a single match as it already
+ * is. A 20-minute cameo must still be able to produce an 8-9 Match Rating.
  */
 
 export interface MatchRatingInput {
@@ -93,7 +104,7 @@ export function computeMatchRatings(rows: MatchRatingInput[]): MatchRating[] {
       matchLog: [{ minutes: r.minutes, bps: r.bps }],
     }));
 
-  const { players } = computeProvisionalRankings(inputs);
+  const { players } = computeProvisionalRankings(inputs, { applyReliability: false });
   const minutesById = new Map(rows.map((r) => [r.playerId, r.minutes]));
 
   return players.map((p) => ({
