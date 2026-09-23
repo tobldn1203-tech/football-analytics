@@ -5,22 +5,12 @@
 /*
   Design tokens — "football intelligence" palette.
 
-  THEME DEFAULT (see lib/theme/ and app/layout.tsx's blocking init script):
-  DARK is the product's default appearance, applied by `:root` itself below
-  — not by `prefers-color-scheme`, which no longer has any say in the
-  app's theme at all. `:root[data-theme="light"]` is the one opt-in
-  override, applied only after an explicit user choice. Every colour value
-  in both blocks is unchanged from before this became the default — this
-  only changed WHICH theme applies with no attribute present, never either
-  theme's own colours.
-
-  Base: deep navy ink on warm off-white in light mode (a modern, cooler-
-  toned evolution of the earlier olive-paper palette — still editorial,
-  less "vintage newspaper"). Brand/interactive colour is an electric
-  lime/chartreuse, used as: a legible darkened "ink-safe" variant for
-  text/lines on light surfaces (--color-accent in light mode), and the true
-  vivid lime for the fixed-dark hero band and other dark surfaces
-  (--hero-accent, and --color-accent in dark mode) where it can sing
+  Base: deep navy ink on warm off-white (a modern, cooler-toned evolution of
+  the earlier olive-paper palette — still editorial, less "vintage
+  newspaper"). Brand/interactive colour is an electric lime/chartreuse,
+  used as: a legible darkened "ink-safe" variant for text/lines on light
+  surfaces (--color-accent), and the true vivid lime for the fixed-dark
+  hero band and other dark surfaces (--hero-accent) where it can sing
   without a contrast problem.
 
   Semantic system (never used as decoration alone):
@@ -30,74 +20,6 @@
     negative        → decline, mistakes (coral)
 */
 :root {
-  /* Fixed masthead surface — intentionally does not invert with theme;
-     it's a brand element (like a newspaper's editorial band), not content.
-     Deep navy-black, not neutral black — ties the hero to the ink hue.
-     Theme-independent, so it lives here unconditionally rather than in
-     either theme block below. */
-  --hero-bg: #0b0e1c;
-  --hero-bg-2: #171b2e;
-  --hero-glow: rgba(203, 244, 58, 0.14);
-  --hero-ink: #f6f6f2;
-  --hero-ink-soft: rgba(246, 246, 242, 0.64);
-  --hero-ink-faint: rgba(246, 246, 242, 0.42);
-  --hero-border: rgba(246, 246, 242, 0.12);
-  --hero-accent: #cbf43a;
-  --hero-info: #4dd9e8;
-  --hero-attention: #f2b807;
-
-  --font-sans: var(--font-geist-sans), -apple-system, "Segoe UI", sans-serif;
-  --font-display: var(--font-editorial), Georgia, serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-
-  --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-entrance: 700ms;
-  --duration-breathe: 6000ms;
-
-  /* DARK — Floodlit, the default. Applies whenever data-theme is absent or
-     "dark"; see app/layout.tsx for how a returning light-mode visitor gets
-     data-theme="light" set before first paint instead. */
-  --color-canvas: #0b0e1c;
-  --color-surface: #12162a;
-  --color-surface-2: #171c33;
-  --color-border: #262c46;
-  --color-border-strong: #383f5e;
-  --color-ink: #f1f1f5;
-  --color-ink-soft: #b7b9cb;
-  --color-ink-faint: #7d8098;
-
-  --color-accent: #cbf43a;
-  --color-accent-soft: #202b0e;
-  --color-positive: var(--color-accent);
-  --color-positive-soft: var(--color-accent-soft);
-
-  --color-info: #4dd9e8;
-  --color-info-soft: #0f2a30;
-
-  --color-attention: #f2b807;
-  --color-attention-soft: #2e2308;
-
-  --color-negative: #f17557;
-  --color-negative-soft: #2e1710;
-
-  /* LEAGUE LEADERS — Floodlit (dark). A night match: near-black stadium
-     ground, a vertical floodlight beam rather than a radial wash, and each
-     player rim-lit in their own club colour. */
-  --leaders-bg: radial-gradient(140% 90% at 50% -12%, #1a2036 0%, #0b0e1c 55%, #05060d 100%);
-  --leaders-ink: #f6f6f2;
-  --leaders-ink-soft: rgba(246, 246, 242, 0.66);
-  --leaders-ink-faint: rgba(246, 246, 242, 0.42);
-  --leaders-accent: #cbf43a;
-  --leaders-line: rgba(246, 246, 242, 0.09);
-  --leaders-glow: rgba(203, 244, 58, 0.22);
-  --leaders-glow-ambient: 0.9;
-  --leaders-portrait-fade: #0b0e1c;
-  --leaders-shadow: none;
-}
-
-/* LIGHT — "Day Match", opt-in only via an explicit saved choice (see
-   lib/theme/). Byte-identical to this app's previous default palette. */
-:root[data-theme="light"] {
   --color-canvas: #faf8f3;
   --color-surface: #ffffff;
   --color-surface-2: #eef0f3;
@@ -125,16 +47,34 @@
   --color-negative: #b8422c;
   --color-negative-soft: #fbe3dc;
 
+  /* Fixed masthead surface — intentionally does not invert with theme;
+     it's a brand element (like a newspaper's editorial band), not content.
+     Deep navy-black, not neutral black — ties the hero to the ink hue. */
+  --hero-bg: #0b0e1c;
+  --hero-bg-2: #171b2e;
+  --hero-glow: rgba(203, 244, 58, 0.14);
+  --hero-ink: #f6f6f2;
+  --hero-ink-soft: rgba(246, 246, 242, 0.64);
+  --hero-ink-faint: rgba(246, 246, 242, 0.42);
+  --hero-border: rgba(246, 246, 242, 0.12);
+  --hero-accent: #cbf43a;
+  --hero-info: #4dd9e8;
+  --hero-attention: #f2b807;
+
+  --font-sans: var(--font-geist-sans), -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-editorial), Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
   /*
-    LEAGUE LEADERS — "Day Match" (light). Deliberately a SEPARATE token set
-    from --hero-* above, not a reuse of it: --hero-* is intentionally
-    fixed-dark regardless of theme (an editorial masthead, like a
-    newspaper banner — see its own comment). This is the one surface in
-    the app designed to change character with the theme, on purpose,
-    because it's the homepage's flagship moment and light mode must be its
-    own art direction, not dark-mode-with-inverted-values. See
-    docs/VISUAL_UX_REIMAGINATION.md. Light = a sunlit pitch (warm, single
-    high light source, grass accent).
+    LEAGUE LEADERS — "Day Match" (light) / "Floodlit" (dark).
+    Deliberately a SEPARATE token set from --hero-* above, not a reuse of it:
+    --hero-* is intentionally fixed-dark in both themes (an editorial
+    masthead, like a newspaper banner — see its own comment). This is the
+    one surface in the app designed to change character with the theme, on
+    purpose, because it's the homepage's flagship moment and the brief this
+    was built for is explicit that light mode must be its own art direction,
+    not dark-mode-with-inverted-values. See docs/VISUAL_UX_REIMAGINATION.md.
+    Light = a sunlit pitch (warm, single high light source, grass accent).
   */
   --leaders-bg: linear-gradient(175deg, #fffaf1 0%, #fef1dd 48%, #fbe6c8 100%);
   --leaders-ink: #14171f;
@@ -146,6 +86,51 @@
   --leaders-glow-ambient: 0.4;
   --leaders-portrait-fade: #fef1dd; /* mask-fade target = the surface itself, not black */
   --leaders-shadow: 0 20px 40px -20px rgba(90, 66, 24, 0.35);
+
+  --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-entrance: 700ms;
+  --duration-breathe: 6000ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas: #0b0e1c;
+    --color-surface: #12162a;
+    --color-surface-2: #171c33;
+    --color-border: #262c46;
+    --color-border-strong: #383f5e;
+    --color-ink: #f1f1f5;
+    --color-ink-soft: #b7b9cb;
+    --color-ink-faint: #7d8098;
+
+    --color-accent: #cbf43a;
+    --color-accent-soft: #202b0e;
+    --color-positive: var(--color-accent);
+    --color-positive-soft: var(--color-accent-soft);
+
+    --color-info: #4dd9e8;
+    --color-info-soft: #0f2a30;
+
+    --color-attention: #f2b807;
+    --color-attention-soft: #2e2308;
+
+    --color-negative: #f17557;
+    --color-negative-soft: #2e1710;
+
+    /* LEAGUE LEADERS — Floodlit (dark). A night match: near-black stadium
+       ground, a vertical floodlight beam rather than a radial wash, and
+       each player rim-lit in their own club colour. */
+    --leaders-bg: radial-gradient(140% 90% at 50% -12%, #1a2036 0%, #0b0e1c 55%, #05060d 100%);
+    --leaders-ink: #f6f6f2;
+    --leaders-ink-soft: rgba(246, 246, 242, 0.66);
+    --leaders-ink-faint: rgba(246, 246, 242, 0.42);
+    --leaders-accent: #cbf43a;
+    --leaders-line: rgba(246, 246, 242, 0.09);
+    --leaders-glow: rgba(203, 244, 58, 0.22);
+    --leaders-glow-ambient: 0.9;
+    --leaders-portrait-fade: #0b0e1c;
+    --leaders-shadow: none;
+  }
 }
 
 @theme inline {
