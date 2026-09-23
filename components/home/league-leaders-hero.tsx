@@ -7,6 +7,7 @@ import clsx from "clsx";
 import type { RankedPlayer } from "@/lib/analytics/scoring/types";
 import { explainPlayer } from "@/lib/analytics/scoring/explain";
 import { getTeamColor } from "@/lib/competitions/teamBranding";
+import { POSITION_LABEL } from "@/lib/competitions/premier-league";
 import { useCountUp } from "@/lib/hooks/useCountUp";
 
 /**
@@ -252,16 +253,32 @@ function LeaderPortrait({
           }}
         />
       ) : (
+        // No working photo at the source for this player — real, not rare:
+        // roughly 40% of the database has no photo the Premier League's own
+        // CDN actually serves (verified directly against every player, not
+        // assumed). Deliberately NOT a smaller/plainer "broken image"
+        // treatment: it shares the real photo's exact footprint, its same
+        // edge-dissolving mask, and a crisp club-colour ring, so a missing
+        // photo reads as one of two intentional looks this hero can show,
+        // not a degraded fallback bolted on afterwards.
         <span
-          className="flex h-[86%] w-[86%] items-center justify-center rounded-full font-display font-semibold"
+          className="flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-full font-display font-semibold"
           style={{
-            fontSize: size * 0.3,
-            background: `color-mix(in srgb, ${teamColor} 22%, transparent)`,
+            background: `radial-gradient(circle at 42% 32%, color-mix(in srgb, ${teamColor} 42%, white) 0%, color-mix(in srgb, ${teamColor} 30%, transparent) 55%, transparent 88%)`,
+            boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${teamColor} 55%, transparent)`,
             color: teamColor,
+            maskImage: "radial-gradient(ellipse 68% 88% at 50% 38%, black 62%, transparent 96%)",
+            WebkitMaskImage: "radial-gradient(ellipse 68% 88% at 50% 38%, black 62%, transparent 96%)",
           }}
           aria-hidden="true"
         >
-          {initialsOf(player.name)}
+          <span style={{ fontSize: size * 0.28 }}>{initialsOf(player.name)}</span>
+          <span
+            className="text-[9px] font-sans font-semibold uppercase tracking-[0.08em] opacity-80"
+            style={{ fontSize: size * 0.075 }}
+          >
+            {POSITION_LABEL[player.position]}
+          </span>
         </span>
       )}
     </span>
