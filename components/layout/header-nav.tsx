@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePreferences } from "@/lib/preferences/usePreferences";
 import { MyFootballNav } from "@/components/personalisation/my-football-nav";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 /**
  * HEADER NAVIGATION — active-state aware
@@ -135,8 +136,9 @@ export function HeaderNav() {
         the nav above it hidden, an always-on left border here would have
         been a stray line with nothing to its left at mobile widths.
       */}
-      <span className="shrink-0 pl-2 sm:border-l sm:border-[var(--color-border)] sm:pl-5">
+      <span className="flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:border-l sm:border-[var(--color-border)] sm:pl-5">
         <MyFootballNav isActive={myFootballIsActive} />
+        <ThemeToggle />
       </span>
     </>
   );
