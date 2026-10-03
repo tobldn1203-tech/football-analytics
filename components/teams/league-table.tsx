@@ -82,7 +82,15 @@ export function LeagueTable({
               >
                 <td
                   className="px-2.5 py-2.5 text-center tabular text-[var(--color-ink-faint)]"
-                  style={highlighted ? { boxShadow: `inset 3px 0 0 ${accent}` } : undefined}
+                  style={{
+                    // Highlighted (supported club / compact-view centre)
+                    // keeps its existing, stronger fixed 3px tick, exactly
+                    // as before in both themes. Every other row now gets a
+                    // quieter permanent tick too, via --row-swatch (3px in
+                    // Stadium Daylight, 0px in dark — a no-op there, so
+                    // unhighlighted rows in dark are unchanged).
+                    boxShadow: highlighted ? `inset 3px 0 0 ${accent}` : `inset var(--row-swatch) 0 0 ${accent}`,
+                  }}
                 >
                   {s.position}
                 </td>

@@ -45,7 +45,10 @@ export function TopPerformers({
   }, [players, active, definition.available]);
 
   return (
-    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 pt-5 pb-5 sm:px-8 sm:pb-7">
+    <section
+      className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 pt-5 pb-5 sm:px-8 sm:pb-7"
+      style={{ boxShadow: "var(--shadow-day)" }}
+    >
       <div className="px-2 sm:px-0">
         <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-faint)]">
           Full rankings
@@ -240,7 +243,16 @@ function PerformanceTable({
                     "group border-b border-[var(--color-border)] transition-colors last:border-0 hover:bg-[var(--color-surface-2)]",
                     isExpanded && "bg-[var(--color-surface-2)]"
                   )}
-                  style={{ ["--row-accent" as string]: getTeamColor(p.teamShortName) }}
+                  style={{
+                    ["--row-accent" as string]: getTeamColor(p.teamShortName),
+                    // Stadium Daylight: a permanent, quiet club-colour tick on
+                    // every row (--row-swatch: 3px), independent of the
+                    // existing hover-only border-left below — that mechanism
+                    // is completely untouched, so it still fully intensifies
+                    // on hover exactly as before. --row-swatch is 0px in
+                    // dark, making this a no-op there.
+                    boxShadow: "inset var(--row-swatch) 0 0 var(--row-accent)",
+                  }}
                 >
                   <td className="border-l-[3px] border-transparent py-2.5 pr-2 pl-2 tabular text-[var(--color-ink-faint)] transition-colors group-hover:[border-left-color:var(--row-accent)] sm:pr-3">
                     {i + 1}

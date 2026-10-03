@@ -114,7 +114,10 @@ export function MyFootballWidget({
   return (
     <div
       className="overflow-hidden rounded-2xl border"
-      style={{ borderColor: `color-mix(in srgb, ${accent} 22%, var(--color-border))` }}
+      style={{
+        borderColor: `color-mix(in srgb, ${accent} 22%, var(--color-border))`,
+        boxShadow: "var(--shadow-day)",
+      }}
     >
       {/* CLUB IDENTITY + INTELLIGENCE — one link, one destination. Crest and
           name anchor "this is my club"; the intelligence line is the reason
@@ -138,7 +141,14 @@ export function MyFootballWidget({
         <span className="relative shrink-0">
           <span
             className="pointer-events-none absolute inset-0 -z-10 scale-150 rounded-full blur-xl"
-            style={{ background: `color-mix(in srgb, ${accent} 24%, transparent)` }}
+            style={{ background: `color-mix(in srgb, ${accent} var(--widget-rim-intensity), transparent)` }}
+            aria-hidden="true"
+          />
+          {/* kit swatch — same device as League Leaders' portraits, one
+              register smaller; zero effect in dark (--kit-swatch-opacity: 0). */}
+          <span
+            className="pointer-events-none absolute -inset-1.5 -z-20 rounded-xl"
+            style={{ backgroundColor: accent, opacity: "var(--kit-swatch-opacity)" }}
             aria-hidden="true"
           />
           <TeamCrest crestUrl={club.crestUrl} shortName={club.shortName} size="lg" />

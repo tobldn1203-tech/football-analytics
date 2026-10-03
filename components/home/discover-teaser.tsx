@@ -23,7 +23,7 @@ export function DiscoverTeaser({ discover }: { discover: HomepageDiscover }) {
     <Link
       href="/discover"
       className="group mb-8 flex flex-col gap-4 rounded-xl border border-[var(--color-border)] px-5 py-4 transition-colors hover:bg-[var(--color-surface-2)] sm:flex-row sm:items-center sm:justify-between"
-      style={{ borderLeftColor: featured.tint, borderLeftWidth: 3 }}
+      style={{ borderLeftColor: featured.tint, borderLeftWidth: 3, boxShadow: "var(--shadow-day)" }}
     >
       <div className="flex items-center gap-3">
         <span

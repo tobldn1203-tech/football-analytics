@@ -94,8 +94,16 @@ export function LeagueLeadersHero({
         ))}
       </div>
 
-      {/* the shared baseline the trio "stands" on — a pitch-edge line, not a generic divider */}
-      <div className="relative mt-5 h-px w-full sm:mt-7" style={{ background: "var(--leaders-line)" }} aria-hidden="true" />
+      {/* the shared baseline the trio "stands" on — a touchline, not a generic
+          divider. In light mode (Stadium Daylight) --touchline-image adds a
+          real pitch-marking tick pattern on top of the same solid line;
+          --touchline-image is `none` in dark, leaving Floodlit's plain
+          baseline exactly as it was. */}
+      <div
+        className="relative mt-5 h-px w-full sm:mt-7"
+        style={{ backgroundColor: "var(--leaders-line)", backgroundImage: "var(--touchline-image)" }}
+        aria-hidden="true"
+      />
     </section>
   );
 }
@@ -230,12 +238,26 @@ function LeaderPortrait({
       className="relative flex shrink-0 items-end justify-center transition-transform duration-300 group-hover/leader:scale-[1.035]"
       style={{ width: size, height: size * (isLeader ? 1.08 : 1) }}
     >
-      {/* club-colour rim light — the per-entity "identity light" behind the cutout */}
+      {/* club-colour rim light — the per-entity "identity light" behind the
+          cutout. --rim-intensity is 60% in dark (Floodlit's original,
+          unchanged value) and a lower 46% in light (Stadium Daylight),
+          since a saturated glow reads as light spill at night but as mud on
+          a bright surface — the same recipe, tuned per theme via CSS, not a
+          second code path. */}
       <span
         className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl"
         style={{
-          background: `radial-gradient(circle, color-mix(in srgb, ${teamColor} 60%, transparent) 0%, transparent 72%)`,
+          background: `radial-gradient(circle, color-mix(in srgb, ${teamColor} var(--rim-intensity), transparent) 0%, transparent 72%)`,
         }}
+        aria-hidden="true"
+      />
+      {/* kit swatch — a firm rectangular block of club colour, the "Stadium
+          Daylight" reading of identity (a shirt's colour, not a glow).
+          --kit-swatch-opacity is 0 in dark, so this has zero visual effect
+          there — Floodlit keeps its single circular rim light, unchanged. */}
+      <span
+        className="pointer-events-none absolute -inset-2 -z-20 rounded-2xl"
+        style={{ backgroundColor: teamColor, opacity: "var(--kit-swatch-opacity)" }}
         aria-hidden="true"
       />
       {heroPhoto && !failed ? (
